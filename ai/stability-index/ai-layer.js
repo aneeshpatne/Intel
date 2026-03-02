@@ -11,7 +11,11 @@ const apiKey = process.env.OPENAI_API_KEY;
 
 const openai = createOpenAI({ apiKey });
 
-export async function generateIndiaRiskAssessment(newsSummary, region) {
+export async function generateIndiaRiskAssessment(
+  newsSummary,
+  region,
+  recentStabilityScores = [],
+) {
   const prompt = `You are a geopolitical risk analyst for ${region}, so your estimations need to be with respect to ${region} and effect on ${region}'s Population only.
 Use the news items below to estimate current national risk levels.
 
@@ -21,7 +25,11 @@ Requirements:
 - 1 means severe and widespread risk signal in the input.
 - Base scores only on the provided items, with stronger weight on recurring themes and high-impact events.
 - If evidence is mixed or limited, keep values moderate instead of extreme.
+- Recent stability_score history is additional context for continuity/trend only; do not override clear evidence from current news.
 - top_risk_factors and top_stabilizers must be concise headline-style phrases, each <= 95 characters.
+
+Recent stability_score history (oldest to newest, up to 5):
+${JSON.stringify(recentStabilityScores)}
 
 News feed:
 ${newsSummary}`;
@@ -45,7 +53,13 @@ ${newsSummary}`;
           diplomatic_tension: z.number().min(0).max(1),
         }),
         top_risk_factors: z
-          .array(z.string().describe("Concise headline-style phrase, ideally <= 95 characters"))
+          .array(
+            z
+              .string()
+              .describe(
+                "Concise headline-style phrase, ideally <= 95 characters",
+              ),
+          )
           .max(8),
         stabilizers: z.object({
           deescalation_peace_process: z.number().min(0).max(1),
@@ -54,7 +68,13 @@ ${newsSummary}`;
           services_restored: z.number().min(0).max(1),
         }),
         top_stabilizers: z
-          .array(z.string().describe("Concise headline-style phrase, ideally <= 95 characters"))
+          .array(
+            z
+              .string()
+              .describe(
+                "Concise headline-style phrase, ideally <= 95 characters",
+              ),
+          )
           .max(8),
         exposure: z.object({
           domestic: z.number().min(0).max(1),
@@ -64,6 +84,8 @@ ${newsSummary}`;
           intensity_overall: z.number().min(0).max(1),
           uncertainty: z.number().min(0).max(1),
           confidence: z.number().min(0).max(1),
+          trend: z.string().describe("1 word only"),
+          alert_color: z.string().describe("Red, orange, yellow or Green."),
         }),
       }),
     }),
