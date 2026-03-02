@@ -37,5 +37,5 @@ export async function getIndiaNewsSummary() {
 }
 
 const newsSummary = await getIndiaNewsSummary();
-const output = await generateIndiaRiskAssessment(newsSummary);
+const output = await generateIndiaRiskAssessment(newsSummary, "India");
 console.log(output);

@@ -11,8 +11,8 @@ const apiKey = process.env.OPENAI_API_KEY;
 
 const openai = createOpenAI({ apiKey });
 
-export async function generateIndiaRiskAssessment(newsSummary) {
-  const prompt = `You are a geopolitical risk analyst for India.
+export async function generateIndiaRiskAssessment(newsSummary, region) {
+  const prompt = `You are a geopolitical risk analyst for ${region}, so your estimations need to be with respect to ${region} and effect on ${region}'s Population only.
 Use the news items below to estimate current national risk levels.
 
 Requirements:
@@ -43,6 +43,7 @@ ${newsSummary}`;
           sanctions_trade_constraints: z.number().min(0).max(1),
           diplomatic_tension: z.number().min(0).max(1),
         }),
+        top_risk_factors: z.array(z.string()).max(5),
       }),
     }),
   });
