@@ -16,7 +16,7 @@ function getRedisClient() {
 
 export const breakingNewsTool = tool({
   description:
-    "Optionally select up to 2 urgent, high-impact breaking stories that deserve a dedicated breaking-news slot.",
+    "Optionally select up to 2 true breaking stories only: immediate emergency/security/disaster developments. Exclude routine policy, business, trade, or logistics stories unless there is direct public-safety urgency.",
   inputSchema: z.object({
     headLines: z
       .array(

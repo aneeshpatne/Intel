@@ -24,7 +24,14 @@ Tasks:
 1) Select up to 10 highest-priority stories (national impact, urgency, public interest, and cross-source relevance). Exclude duplicates and low-signal items.
 2) Rewrite each selected story as a concise, headline-style phrase (clear, factual, no clickbait).
 3) Call itemTool exactly once with those selected items.
-4) Optionally call breakingNewsTool once only if there are truly urgent/high-impact developments that warrant a separate breaking section. If used, provide up to 2 SEO-friendly headline/search phrases.
+4) Optionally call breakingNewsTool once only for true "breaking" events.
+   Breaking means immediate, time-sensitive developments such as:
+   - active military escalation/attack with immediate consequences
+   - major terror/security incident
+   - sudden government emergency action
+   - large casualty/disaster event
+   Do NOT use breakingNewsTool for routine policy, analysis, market/trade/logistics or economic-impact-only stories unless there is an immediate public-safety emergency.
+   If used, provide up to 2 SEO-friendly headline/search phrases.
 
 Constraints:
 - Keep phrasing precise and scannable.
