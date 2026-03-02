@@ -12,34 +12,39 @@ const apiKey = process.env.OPENAI_API_KEY;
 const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 
 const openai = createOpenAI({ apiKey });
-const redis = createClient({ url: redisUrl });
 
-let indiaNews = [];
-try {
-  await redis.connect();
-  indiaNews = await redis.lRange("newsCollection:India", 0, -1);
-} finally {
-  if (redis.isOpen) {
-    await redis.close();
+async function getIndiaNewsSummary() {
+  const redis = createClient({ url: redisUrl });
+  let indiaNews = [];
+
+  try {
+    await redis.connect();
+    indiaNews = await redis.lRange("newsCollection:India", 0, -1);
+  } finally {
+    if (redis.isOpen) {
+      await redis.close();
+    }
   }
+
+  return indiaNews
+    .map((item) => {
+      try {
+        const asText = typeof item === "string" ? item : item.toString("utf8");
+        const parsed = JSON.parse(asText);
+        const title = parsed?.title ?? "";
+        const description = parsed?.description ?? "";
+        return `Title: ${title}\nDescription: ${description}`;
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean)
+    .join("\n\n");
 }
 
-const newsSummary = indiaNews
-  .map((item) => {
-    try {
-      const asText = typeof item === "string" ? item : item.toString("utf8");
-      const parsed = JSON.parse(asText);
-      const title = parsed?.title ?? "";
-      const description = parsed?.description ?? "";
-      return `Title: ${title}\nDescription: ${description}`;
-    } catch {
-      return "";
-    }
-  })
-  .filter(Boolean)
-  .join("\n\n");
-
-const prompt = `You are a geopolitical risk analyst for India.
+async function generateIndiaRiskAssessment() {
+  const newsSummary = await getIndiaNewsSummary();
+  const prompt = `You are a geopolitical risk analyst for India.
 Use the news items below to estimate current national risk levels.
 
 Requirements:
@@ -52,26 +57,30 @@ Requirements:
 News feed:
 ${newsSummary}`;
 
-const { output } = await generateText({
-  model: openai("gpt-5-nano"),
-  prompt,
-  output: Output.object({
-    schema: z.object({
-      risk: z.object({
-        armed_conflict_intensity: z.number().min(0).max(1),
-        civilian_harm: z.number().min(0).max(1),
-        government_stability: z.number().min(0).max(1),
-        institutional_trust_legitimacy: z.number().min(0).max(1),
-        protest_unrest_intensity: z.number().min(0).max(1),
-        economic_financial_instability: z.number().min(0).max(1),
-        inflation_cost_of_living_stress: z.number().min(0).max(1),
-        critical_infra_outages: z.number().min(0).max(1),
-        disaster_climate_impact: z.number().min(0).max(1),
-        sanctions_trade_constraints: z.number().min(0).max(1),
-        diplomatic_tension: z.number().min(0).max(1),
+  const { output } = await generateText({
+    model: openai("gpt-5-nano"),
+    prompt,
+    output: Output.object({
+      schema: z.object({
+        risk: z.object({
+          armed_conflict_intensity: z.number().min(0).max(1),
+          civilian_harm: z.number().min(0).max(1),
+          government_stability: z.number().min(0).max(1),
+          institutional_trust_legitimacy: z.number().min(0).max(1),
+          protest_unrest_intensity: z.number().min(0).max(1),
+          economic_financial_instability: z.number().min(0).max(1),
+          inflation_cost_of_living_stress: z.number().min(0).max(1),
+          critical_infra_outages: z.number().min(0).max(1),
+          disaster_climate_impact: z.number().min(0).max(1),
+          sanctions_trade_constraints: z.number().min(0).max(1),
+          diplomatic_tension: z.number().min(0).max(1),
+        }),
       }),
     }),
-  }),
-});
+  });
 
+  return output;
+}
+
+const output = await generateIndiaRiskAssessment();
 console.log(output);
