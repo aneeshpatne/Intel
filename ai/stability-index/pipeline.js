@@ -2,6 +2,7 @@ import { createClient } from "redis";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { generateIndiaRiskAssessment } from "./ai-layer.js";
+import { computeStabilityIndex } from "./compute_layer.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
@@ -38,4 +39,5 @@ export async function getIndiaNewsSummary() {
 
 const newsSummary = await getIndiaNewsSummary();
 const output = await generateIndiaRiskAssessment(newsSummary, "India");
-console.log(output);
+const computed = computeStabilityIndex(output);
+console.log({ ...output, computed });
