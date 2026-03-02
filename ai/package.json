@@ -2,7 +2,8 @@
   "type": "module",
   "dependencies": {
     "@ai-sdk/openai": "^3.0.37",
-    "ai": "^6.0.105"
+    "ai": "^6.0.105",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.3.3"
