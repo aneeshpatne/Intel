@@ -21,6 +21,7 @@ Requirements:
 - 1 means severe and widespread risk signal in the input.
 - Base scores only on the provided items, with stronger weight on recurring themes and high-impact events.
 - If evidence is mixed or limited, keep values moderate instead of extreme.
+- top_risk_factors and top_stabilizers must be concise headline-style phrases, each <= 95 characters.
 
 News feed:
 ${newsSummary}`;
@@ -43,14 +44,18 @@ ${newsSummary}`;
           sanctions_trade_constraints: z.number().min(0).max(1),
           diplomatic_tension: z.number().min(0).max(1),
         }),
-        top_risk_factors: z.array(z.string()).max(5),
+        top_risk_factors: z
+          .array(z.string().describe("Concise headline-style phrase, ideally <= 95 characters"))
+          .max(8),
         stabilizers: z.object({
           deescalation_peace_process: z.number().min(0).max(1),
           governance_effectiveness: z.number().min(0).max(1),
           economic_relief_positive: z.number().min(0).max(1),
           services_restored: z.number().min(0).max(1),
         }),
-        top_stabilizers: z.array(z.string()),
+        top_stabilizers: z
+          .array(z.string().describe("Concise headline-style phrase, ideally <= 95 characters"))
+          .max(8),
         exposure: z.object({
           domestic: z.number().min(0).max(1),
           external_spillover: z.number().min(0).max(1),
