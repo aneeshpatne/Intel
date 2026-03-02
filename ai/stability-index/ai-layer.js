@@ -26,7 +26,7 @@ News feed:
 ${newsSummary}`;
 
   const { output } = await generateText({
-    model: openai("gpt-5-nano"),
+    model: openai("gpt-5.2"),
     prompt,
     output: Output.object({
       schema: z.object({
@@ -44,6 +44,22 @@ ${newsSummary}`;
           diplomatic_tension: z.number().min(0).max(1),
         }),
         top_risk_factors: z.array(z.string()).max(5),
+        stabilizers: z.object({
+          deescalation_peace_process: z.number().min(0).max(1),
+          governance_effectiveness: z.number().min(0).max(1),
+          economic_relief_positive: z.number().min(0).max(1),
+          services_restored: z.number().min(0).max(1),
+        }),
+        top_stabilizers: z.array(z.string()),
+        exposure: z.object({
+          domestic: z.number().min(0).max(1),
+          external_spillover: z.number().min(0).max(1),
+        }),
+        meta: z.object({
+          intensity_overall: z.number().min(0).max(1),
+          uncertainty: z.number().min(0).max(1),
+          confidence: z.number().min(0).max(1),
+        }),
       }),
     }),
   });
