@@ -10,9 +10,10 @@ process.loadEnvFile(path.resolve(currentDir, "../.env"));
 const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 const redis = createClient({ url: redisUrl });
 await redis.connect();
-let indiaNews = await redis.lRange("newsCollection:India", 0, -1);
 
-export async function getIndiaNewsSummary() {
+
+export async function getNewsSummary(region) {
+let indiaNews = await redis.lRange(`newsCollection:${region}`, 0, -1);
   return indiaNews
     .map((item) => {
       try {
@@ -29,8 +30,8 @@ export async function getIndiaNewsSummary() {
     .join("\n\n");
 }
 
-const newsSummary = await getIndiaNewsSummary();
-const output = await generateIndiaRiskAssessment(newsSummary, "India");
+const newsSummary = await getNewsSummary("World");
+const output = await generateIndiaRiskAssessment(newsSummary, "World");
 const computed = computeStabilityIndex(output);
 console.log(output.top_risk_factors);
 await redis.set("top_risk_factors", JSON.stringify(output.top_risk_factors));
