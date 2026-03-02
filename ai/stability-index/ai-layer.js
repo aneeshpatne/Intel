@@ -1,6 +1,5 @@
 import { generateText, Output } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { createClient } from "redis";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { z } from "zod";
@@ -9,41 +8,10 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
 const apiKey = process.env.OPENAI_API_KEY;
-const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 
 const openai = createOpenAI({ apiKey });
 
-async function getIndiaNewsSummary() {
-  const redis = createClient({ url: redisUrl });
-  let indiaNews = [];
-
-  try {
-    await redis.connect();
-    indiaNews = await redis.lRange("newsCollection:India", 0, -1);
-  } finally {
-    if (redis.isOpen) {
-      await redis.close();
-    }
-  }
-
-  return indiaNews
-    .map((item) => {
-      try {
-        const asText = typeof item === "string" ? item : item.toString("utf8");
-        const parsed = JSON.parse(asText);
-        const title = parsed?.title ?? "";
-        const description = parsed?.description ?? "";
-        return `Title: ${title}\nDescription: ${description}`;
-      } catch {
-        return "";
-      }
-    })
-    .filter(Boolean)
-    .join("\n\n");
-}
-
-async function generateIndiaRiskAssessment() {
-  const newsSummary = await getIndiaNewsSummary();
+export async function generateIndiaRiskAssessment(newsSummary) {
   const prompt = `You are a geopolitical risk analyst for India.
 Use the news items below to estimate current national risk levels.
 
@@ -81,6 +49,3 @@ ${newsSummary}`;
 
   return output;
 }
-
-const output = await generateIndiaRiskAssessment();
-console.log(output);
