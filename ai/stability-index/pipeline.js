@@ -40,4 +40,7 @@ export async function getIndiaNewsSummary() {
 const newsSummary = await getIndiaNewsSummary();
 const output = await generateIndiaRiskAssessment(newsSummary, "India");
 const computed = computeStabilityIndex(output);
-console.log({ ...output, computed });
+console.log(output.top_risk_factors);
+console.log(output.top_stabilizers);
+console.log(computed?.stability_score);
+// console.log({ ...output, computed });
