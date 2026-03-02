@@ -16,14 +16,14 @@ function getRedisClient() {
 
 export const breakingNewsTool = tool({
   description:
-    "Optionally select up to 2 true breaking stories only: immediate emergency/security/disaster developments. Exclude routine policy, business, trade, or logistics stories unless there is direct public-safety urgency.",
+    "Optional tool for true breaking events only. Use only when there is immediate emergency/security/disaster urgency. Output short Google-search-style topics, not full sentence headlines.",
   inputSchema: z.object({
     headLines: z
       .array(
         z
           .string()
           .describe(
-            "SEO-friendly breaking-news headline/search phrase, concise and specific.",
+            "Short Google search topic (4-8 words, <= 65 chars), concise and entity-focused.",
           ),
       )
       .max(2),

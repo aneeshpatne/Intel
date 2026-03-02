@@ -31,7 +31,13 @@ Tasks:
    - sudden government emergency action
    - large casualty/disaster event
    Do NOT use breakingNewsTool for routine policy, analysis, market/trade/logistics or economic-impact-only stories unless there is an immediate public-safety emergency.
-   If used, provide up to 2 SEO-friendly headline/search phrases.
+   Keep this tool truly optional: if unsure, skip it.
+   If used, provide 1-2 topics only when each is independently urgent.
+   Each topic will be directly typed into Google, so write it like a real search query:
+   - 4-8 words
+   - under 65 characters
+   - no filler words, no punctuation-heavy sentence style
+   - include key entities + event (who/where + what happened)
 
 Constraints:
 - Keep phrasing precise and scannable.
