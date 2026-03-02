@@ -51,10 +51,14 @@ const output = await generateIndiaRiskAssessment(
   recentStabilityScores,
 );
 const computed = computeStabilityIndex(output);
-console.log(output.top_risk_factors);
-await redis.set("top_risk_factors", JSON.stringify(output.top_risk_factors));
-console.log(output.top_stabilizers);
-await redis.set("top_stabilizers", JSON.stringify(output.top_stabilizers));
+const stabilitySummary = {
+  top_risk_factors: output?.top_risk_factors ?? [],
+  top_stabilizers: output?.top_stabilizers ?? [],
+  trend: output?.meta?.trend ?? null,
+  alert_color: output?.meta?.alert_color ?? null,
+};
+console.log(stabilitySummary);
+await redis.set("stability_summary", JSON.stringify(stabilitySummary));
 console.log(computed?.stability_score);
 await redis.rPush("stability_score", JSON.stringify(computed?.stability_score));
 await redis.lTrim("stability_score", -5, -1);
