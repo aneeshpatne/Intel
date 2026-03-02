@@ -16,7 +16,7 @@ function getRedisClient() {
 
 export const breakingNewsTool = tool({
   description:
-    "Optional tool for true breaking events only. Use only when there is immediate emergency/security/disaster urgency. Output short Google-search-style topics, not full sentence headlines.",
+    "Optional tool for true breaking events only. Trigger only for immediate emergency/security/disaster urgency with active public-impact risk. Do not trigger for trivial facts, routine updates, background context, commentary, or non-urgent economic/logistics developments. Output short Google-search-style topics, not full sentence headlines.",
   inputSchema: z.object({
     headLines: z
       .array(

@@ -31,8 +31,10 @@ Tasks:
    - sudden government emergency action
    - large casualty/disaster event
    Do NOT use breakingNewsTool for routine policy, analysis, market/trade/logistics or economic-impact-only stories unless there is an immediate public-safety emergency.
+   Do NOT use breakingNewsTool for trivial facts, incremental updates, background context, official statements without immediate action, or already-stabilized situations.
    Keep this tool truly optional: if unsure, skip it.
    If used, provide 1-2 topics only when each is independently urgent.
+   Use a high bar: call it only when a typical user should be alerted immediately.
    Each topic will be directly typed into Google, so write it like a real search query:
    - 4-8 words
    - under 65 characters
