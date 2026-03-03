@@ -31,7 +31,7 @@ Workflow:
 1) Call WebSearchTool as many times as needed with concise search terms focused on the topic.
 2) Use the returned text as source material.
 3) Write one polished markdown article with:
-   - factual headline
+   - single-line impactful title
    - brief context
    - key developments
    - why it matters / what to watch
@@ -42,7 +42,10 @@ Workflow:
 Constraints:
 - Use only information present in the provided notes and tool output.
 - No fabricated facts, dates, or numbers.
-- Keep the article concise and high-signal.`,
+- Keep the article concise and high-signal.
+- Title must be a single line and impactful.
+- Keep content in markdown paragraph format only.
+- Do not use bold, italics, tables, bullet lists, or numbered lists.`,
   });
 
   return text;

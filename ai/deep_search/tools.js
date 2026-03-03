@@ -19,7 +19,11 @@ function getRedisClient() {
 }
 
 export const metadata = [];
-export let startCount = 0;
+let startCount = 0;
+
+export function setWebSearchStartCount(value) {
+  startCount = Number.isFinite(value) ? value : 0;
+}
 
 export const WebSearchTool = tool({
   description: "Use this tool to search the web, use short terms",
