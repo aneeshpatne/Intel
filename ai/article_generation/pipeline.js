@@ -1,7 +1,7 @@
 import { createClient } from "redis";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-
+import ArticleGen from "./article-gen.js";
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
@@ -11,7 +11,6 @@ await redis.connect();
 
 export async function getNewsSummary() {
   const news = await redis.lRange(`newsCollection`, 0, -1);
-
   return news
     .map((item) => {
       try {
@@ -27,3 +26,6 @@ export async function getNewsSummary() {
     .filter(Boolean)
     .join("\n\n");
 }
+
+const items = getNewsSummary();
+await ArticleGen(items);
