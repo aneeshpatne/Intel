@@ -31,8 +31,26 @@ export const itemTool = tool({
   execute: async ({ newsItems }) => {
     const redis = await getRedisClient();
     await redis.set("newsMarquee", JSON.stringify(newsItems));
-    await redis.set("headLines", JSON.stringify(newsItems));
     console.log(newsItems);
     return { newsItems };
+  },
+});
+
+export const ArticleTool = tool({
+  description:
+    "Use this tool to select at most 3 news items that are important and need different article",
+  inputSchema: z.object({
+    articles: z.array(
+      z.object({
+        title: z.string().describe("The title of the news"),
+        initialData: z.string().describe("The initial data that you have"),
+      }),
+    ),
+  }),
+  execute: async ({ articles }) => {
+    const redis = await getRedisClient();
+    await redis.set("selectedArticles", JSON.stringify(articles));
+    console.log(articles);
+    return { articles };
   },
 });

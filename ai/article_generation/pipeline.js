@@ -27,5 +27,5 @@ export async function getNewsSummary() {
     .join("\n\n");
 }
 
-const items = getNewsSummary();
+const items = await getNewsSummary();
 await ArticleGen(items);
