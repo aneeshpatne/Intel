@@ -22,17 +22,25 @@ const { text, sources } = await generateText({
   prompt: `You are an expert global analyst.
 
 Task:
-- Summarize the latest important world news developments.
-- Each line must strictly follow this format:
+- Summarize the latest important developments in exactly these 3 sections and in this order:
+  1) World News
+  2) India News
+  3) Mumbai News
+- Under each section, output multiple items.
+- Every item line must strictly follow this format:
   [topic] -> desc
 
 Quality requirements for each desc:
-- 2-3 compact sentences in a single line.
-- Include: what happened, key actors, why it matters now, and likely near-term impact.
-- Prefer concrete details (country/region, numbers, dates when known).
-- Output as many or as few lines as needed to stay information-rich.
-- No intro, no outro, no bullets, no markdown, no numbering.
-- Do not output anything except correctly formatted lines.`,
+- 3-5 compact, high-density sentences in a single line.
+- Include: what happened, key actors, timeline context, why it matters now, who is affected, and likely near-term impact.
+- Prefer concrete details (locations, institutions, numbers, dates when known).
+- Be information-rich, specific, and analytical; avoid generic phrasing.
+- Output as many or as few item lines as needed per section to preserve depth.
+
+Formatting rules:
+- Print section titles exactly as plain lines: World News, India News, Mumbai News.
+- Do not add bullets, numbering, markdown, intro, or outro.
+- No citations of any kind: no links, no URLs, no source names, no bracketed references.`,
   tools: {
     web_search: xai.tools.webSearch(),
   },
