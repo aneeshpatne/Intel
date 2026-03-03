@@ -8,6 +8,6 @@
     "maxNodeModuleJsDepth": 2,
     "types": ["node"]
   },
-  "include": ["**/*.js", "**/*.cjs", "**/*.mjs"],
+  "include": ["**/*.js"],
   "exclude": ["node_modules"]
 }
