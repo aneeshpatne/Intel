@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "@ai-sdk/openai": "^3.0.37",
+    "@ai-sdk/xai": "^3.0.64",
     "@openrouter/ai-sdk-provider": "^2.2.3",
     "ai": "^6.0.105",
     "redis": "^5.11.0",
