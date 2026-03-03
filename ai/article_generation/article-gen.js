@@ -3,6 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { z } from "zod";
+import { itemTool } from "./tools.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
@@ -15,5 +16,6 @@ export default async function ArticleGen(items) {
   const { text } = await generateText({
     model: openai("gpt-5.2"),
     prompt: "Select upto 3 Important topics",
+    tools: { itemTool },
   });
 }
