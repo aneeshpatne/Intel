@@ -31,6 +31,8 @@ export const WebSearchTool = tool({
     searchTerm: z.string().describe("Short Search Term"),
   }),
   execute: async ({ searchTerm }) => {
+    console.log("------------------SEARCH-TOOL-INVOKED------------------");
+    console.log("Search Term:", searchTerm);
     const res = await fetch(NEWS_API_URL, {
       method: "POST",
       headers: {

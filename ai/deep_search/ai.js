@@ -17,7 +17,7 @@ const openai = createOpenAI({ apiKey });
 export async function Article(topic, initialData = "") {
   const { text } = await generateText({
     model: openai("gpt-5.2"),
-    stopWhen: stepCountIs(4),
+    stopWhen: stepCountIs(8),
     tools: { WebSearchTool, SaveArticle },
     prompt: `You are a senior world-news writer.
 
@@ -28,14 +28,20 @@ Initial notes (may be partial):
 ${initialData || "None"}
 
 Workflow:
-1) Call WebSearchTool as many times as needed with concise search terms focused on the topic.
-2) Use the returned text as source material.
-3) Write one polished markdown article with:
+1) Start with one broad WebSearchTool query for the topic.
+2) Extract missing details (timeline, actors, geography, impact, latest updates).
+3) Call WebSearchTool again with focused follow-up queries to fill those gaps.
+4) Repeat this loop methodically for as many rounds as needed until the information is sufficiently complete:
+   - search
+   - identify gaps/unknowns
+   - targeted follow-up search
+5) Use only the accumulated tool output + initial notes as source material.
+6) Write one polished markdown article with:
    - single-line impactful title
    - brief context
    - key developments
    - why it matters / what to watch
-4) Call SaveArticle exactly once with:
+7) Call SaveArticle exactly once with:
    - title
    - newsContent
 
