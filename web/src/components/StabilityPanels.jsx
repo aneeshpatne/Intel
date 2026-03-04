@@ -2,12 +2,16 @@
 import { useEffect, useMemo, useState } from "react";
 
 /**
+ * @typedef {"yellow" | "orange" | "red" | "green"} AlertColor
+ */
+
+/**
  * @typedef {Object} StabilityData
  * @property {number} score
  * @property {string[]} top_risk_factors
  * @property {string[]} top_stabilizers
  * @property {string} trend
- * @property {string} alert_color
+ * @property {AlertColor} alert_color
  */
 
 /** @type {StabilityData} */
@@ -19,12 +23,24 @@ const FALLBACK = {
   alert_color: "yellow",
 };
 
+/** @type {Record<AlertColor, string>} */
 const COLOR_MAP = {
   yellow: "#eab308",
   orange: "#f97316",
   red: "#ef4444",
   green: "#22c55e",
 };
+
+/**
+ * @param {unknown} value
+ * @returns {AlertColor}
+ */
+function normalizeAlertColor(value) {
+  if (value === "yellow" || value === "orange" || value === "red" || value === "green") {
+    return value;
+  }
+  return "yellow";
+}
 
 /**
  * @param {unknown} value
@@ -43,7 +59,7 @@ function normalizeData(value) {
       ? /** @type {string[]} */ (typed.top_stabilizers)
       : [],
     trend: typeof typed.trend === "string" ? typed.trend : "flat",
-    alert_color: typeof typed.alert_color === "string" ? typed.alert_color : "yellow",
+    alert_color: normalizeAlertColor(typed.alert_color),
   };
 }
 
@@ -97,7 +113,7 @@ export default function StabilityPanels({ label, panelData }) {
       ? stabilizerItems[step % stabilizerItems.length]
       : "No stabilizer data";
 
-  const color = COLOR_MAP[data.alert_color] ?? "#a1a1aa";
+  const color = COLOR_MAP[data.alert_color];
   const isUp = String(data.trend).toLowerCase() === "up";
 
   return (
