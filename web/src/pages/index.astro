@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import NewsMarquee from '../components/marquee.jsx';
 import StabilityPanels from '../components/StabilityPanels.jsx';
 import BreakingNewsFeed from '../components/BreakingNewsFeed.jsx';
+import TelegramOsint from '../components/TelegramOsint.astro';
 
 const BASE_URL = 'http://192.168.0.99:8006';
 
@@ -20,6 +21,7 @@ const marqueeData = await safeJson('/v1/marquee');
 const indiaData = await safeJson('/v1/stability/India');
 const worldData = await safeJson('/v1/stability/World');
 const breakingNewsData = await safeJson('/v1/breaking-news');
+const telegramData = await safeJson('/v1/telegram');
 ---
 
 <Layout title="INTEL">
@@ -43,6 +45,7 @@ const breakingNewsData = await safeJson('/v1/breaking-news');
 			</section>
 
 			<BreakingNewsFeed newsData={breakingNewsData} client:only="react" />
+			<TelegramOsint telegramData={telegramData} />
 		</div>
 	</main>
 </Layout>

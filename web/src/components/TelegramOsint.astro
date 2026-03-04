@@ -1,0 +1,25 @@
+---
+const { telegramData = [] } = Astro.props;
+
+const items = Array.isArray(telegramData) ? telegramData : [];
+---
+
+<section class="mx-auto mt-8 w-full max-w-[80rem] border border-zinc-800/80 bg-[#090c12] p-4 sm:p-5">
+  <div class="mb-3 flex items-center justify-between border-b border-zinc-800/90 pb-3">
+    <h2 class="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-200">LIVE TELEGRAM OSINT</h2>
+    <span class="text-[11px] uppercase tracking-[0.12em] text-zinc-500">{items.length} updates</span>
+  </div>
+
+  <div class="max-h-[22rem] overflow-y-auto pr-1">
+    <div class="grid gap-2 sm:grid-cols-2">
+      {
+        items.map((item, index) => (
+          <article class="border border-zinc-800/80 bg-[#0b0f16] p-3" key={`${index}-${item?.title ?? 'item'}`}>
+            <p class="text-sm font-semibold text-zinc-100">{item?.title ?? 'Untitled'}</p>
+            <p class="mt-1 text-xs leading-relaxed text-zinc-300">{item?.desc ?? 'No description'}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
