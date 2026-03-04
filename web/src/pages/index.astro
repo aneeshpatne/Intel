@@ -1,11 +1,19 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="INTEL">
+	<main class="flex min-h-screen flex-col items-center justify-start bg-[#030303] px-6 pt-4 sm:pt-6 relative overflow-hidden">
+		<!-- Subtle ambient glow top aligned -->
+		<div class="absolute top-0 left-1/2 -translate-x-1/2 flex items-start justify-center pt-10">
+			<div class="h-[20rem] w-[50rem] bg-zinc-500/15 blur-[120px] rounded-full"></div>
+		</div>
+		
+		<div class="relative w-full">
+			<!-- Extra typography styling for premium heavy metallic feel -->
+			<h1 class="relative z-10 bg-gradient-to-b from-white via-zinc-200 to-zinc-800 bg-clip-text text-center text-7xl font-extrabold tracking-[0.15em] text-transparent sm:text-9xl drop-shadow-2xl uppercase">
+				INTEL
+			</h1>
+		</div>
+	</main>
 </Layout>
