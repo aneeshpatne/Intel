@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createClient } from "redis";
 import { Article } from "./ai.js";
-import { setWebSearchStartCount } from "./tools.js";
+import { resetWebSearchState } from "./tools.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
@@ -34,7 +34,7 @@ try {
     const initialData = item?.initialData || "";
     if (!topic) continue;
 
-    setWebSearchStartCount(0);
+    resetWebSearchState();
     const result = await Article(topic, initialData);
     console.log(result);
   }

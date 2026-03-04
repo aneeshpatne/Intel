@@ -18,11 +18,17 @@ function getRedisClient() {
   return redisClientPromise;
 }
 
-export const metadata = [];
+export let metadata = [];
 let startCount = 0;
+
+export function resetWebSearchState() {
+  startCount = 0;
+  metadata = [];
+}
 
 export function setWebSearchStartCount(value) {
   startCount = Number.isFinite(value) ? value : 0;
+  if (startCount === 0) metadata = [];
 }
 
 export const WebSearchTool = tool({
@@ -77,7 +83,14 @@ export const SaveArticle = tool({
   }),
   execute: async ({ article }) => {
     const redis = await getRedisClient();
-    await redis.rPush(SAVED_ARTICLES_KEY, JSON.stringify(article));
+    await redis.rPush(
+      SAVED_ARTICLES_KEY,
+      JSON.stringify({
+        article,
+        source: metadata.map((item) => item.url),
+        ogUrl: metadata[0]?.ogImage ?? null,
+      }),
+    );
     return "saved";
   },
 });
