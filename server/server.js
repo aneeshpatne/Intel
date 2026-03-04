@@ -33,7 +33,18 @@ app.get("/v1/breaking-news", async (_req, res) => {
       message: "No breaking news found",
     });
   }
-  return res.status(200).json(articles);
+
+  const parsed = articles
+    .map((item) => {
+      try {
+        return JSON.parse(item);
+      } catch {
+        return null;
+      }
+    })
+    .filter((item) => item !== null);
+
+  return res.status(200).json(parsed);
 });
 
 app.get("/v1/stability/:region", async (req, res) => {
