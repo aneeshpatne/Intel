@@ -47,8 +47,7 @@ try {
   const dedupText = extractOnlyText(dedupStore);
   const inputText = newText || dedupText;
 
-  const result = await TelegramSummary(inputText);
-  console.log(result);
+  await TelegramSummary(inputText);
 } catch (error) {
   exitCode = 1;
   console.error(error);
