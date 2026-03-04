@@ -30,6 +30,12 @@ export const SaveTool = tool({
   }),
   execute: async ({ newsItem }) => {
     const redis = await getRedisClient();
+    await redis.set(
+      "Telegram-Desc",
+      JSON.stringify(
+        newsItem.map((item) => ({ description: item.description })),
+      ),
+    );
     await redis.set("Telegram-Info", JSON.stringify(newsItem));
     console.log(newsItem);
     return "saved";
