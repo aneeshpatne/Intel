@@ -33,9 +33,13 @@ app.get("/v1/telegram", async (_req, res) => {
       message: "No telegram data found",
     });
   }
-
+  const parsed = JSON.parse(data);
+  const minimal = parsed.map((item) => ({
+    title: item.title,
+    desc: item.short_description,
+  }));
   try {
-    return res.status(200).json(JSON.parse(data));
+    return res.status(200).json(minimal);
   } catch {
     return res.status(200).json([]);
   }
