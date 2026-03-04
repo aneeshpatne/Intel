@@ -27,7 +27,7 @@ Tasks:
    - title: concise, factual, headline-style phrase.
    - initialData: a compact synthesis of known facts from the input (what happened, who/where, and immediate significance).
 3) Call ArticleTool exactly once with the final selected stories.
-4) Optionally call itemTool once if you also identify marquee-worthy headline items.
+4) call itemTool once if you also identify marquee-worthy headline items, with upto 20 headlines.
 
 Constraints:
 - Keep phrasing precise and scannable.
