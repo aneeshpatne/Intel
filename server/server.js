@@ -25,6 +25,17 @@ app.get("/v1/marquee", async (_req, res) => {
   }
 });
 
+app.get("/v1/telegram", async (req, res) => {
+  const data = await redisClient.get("Telegram-Info");
+  if (!data || data.length === 0) {
+    return res.status(404).json({
+      error: "Not Found",
+      message: "No breaking news found",
+    });
+  }
+  return res.status(200).json(data);
+});
+
 app.get("/v1/breaking-news", async (_req, res) => {
   const articles = await redisClient.lRange("savedArticles", 0, -1);
   if (!articles || articles.length === 0) {
