@@ -16,7 +16,13 @@ app.get("/v1/marquee", async (_req, res) => {
       message: "No marquee data found",
     });
   }
-  return res.status(200).json(marquee);
+
+  try {
+    const parsed = JSON.parse(marquee);
+    return res.status(200).json(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return res.status(200).json([]);
+  }
 });
 
 app.get("/v1/breaking-news", async (_req, res) => {
