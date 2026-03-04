@@ -48,6 +48,8 @@ Workflow:
 Constraints:
 - Use only information present in the provided notes and tool output.
 - No fabricated facts, dates, or numbers.
+- For every WebSearchTool call, write the query exactly like a Google search box input: short keyword phrase only, no long sentence.
+- Keep each searchTerm compact (about 6-20 words), high-signal keywords only.
 - Keep the article concise and high-signal.
 - Title must be a single line and impactful.
 - Keep content in markdown paragraph format only.
