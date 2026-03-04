@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import NewsMarquee from '../components/marquee.jsx';
 import StabilityPanels from '../components/StabilityPanels.jsx';
+import BreakingNewsFeed from '../components/BreakingNewsFeed.jsx';
 
 const BASE_URL = 'http://192.168.0.99:8006';
 
@@ -18,6 +19,7 @@ async function safeJson(path: string) {
 const marqueeData = await safeJson('/v1/marquee');
 const indiaData = await safeJson('/v1/stability/India');
 const worldData = await safeJson('/v1/stability/World');
+const breakingNewsData = await safeJson('/v1/breaking-news');
 ---
 
 <Layout title="INTEL">
@@ -39,6 +41,8 @@ const worldData = await safeJson('/v1/stability/World');
 				<StabilityPanels label="India" panelData={indiaData} client:only="react" />
 				<StabilityPanels label="World" panelData={worldData} client:only="react" />
 			</section>
+
+			<BreakingNewsFeed newsData={breakingNewsData} client:only="react" />
 		</div>
 	</main>
 </Layout>
