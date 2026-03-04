@@ -14,29 +14,34 @@ function redisValueToString(value) {
 
 const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 const redis = createClient({ url: redisUrl });
+let exitCode = 0;
 
-await redis.connect();
-
-const rawSelected = await redis.get("selectedArticles");
-const rawSelectedText = redisValueToString(rawSelected);
-
-let selectedArticles = [];
 try {
-  selectedArticles = JSON.parse(rawSelectedText);
-} catch {
-  selectedArticles = [];
-}
+  await redis.connect();
 
-for (const item of selectedArticles) {
-  const topic = item?.title || "";
-  const initialData = item?.initialData || "";
-  if (!topic) continue;
+  const rawSelected = await redis.get("selectedArticles");
+  const rawSelectedText = redisValueToString(rawSelected);
 
-  setWebSearchStartCount(0);
-  const result = await Article(topic, initialData);
-  console.log(result);
-}
+  let selectedArticles = [];
+  try {
+    selectedArticles = JSON.parse(rawSelectedText);
+  } catch {
+    selectedArticles = [];
+  }
 
-if (redis.isOpen) {
-  await redis.quit();
+  for (const item of selectedArticles) {
+    const topic = item?.title || "";
+    const initialData = item?.initialData || "";
+    if (!topic) continue;
+
+    setWebSearchStartCount(0);
+    const result = await Article(topic, initialData);
+    console.log(result);
+  }
+} catch (error) {
+  exitCode = 1;
+  console.error(error);
+} finally {
+  if (redis.isOpen) await redis.quit();
+  process.exit(exitCode);
 }

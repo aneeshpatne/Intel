@@ -7,7 +7,7 @@ process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
 const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 const redis = createClient({ url: redisUrl });
-await redis.connect();
+let exitCode = 0;
 
 export async function getNewsSummary() {
   const news = await redis.lRange(`newsCollection`, 0, -1);
@@ -27,5 +27,14 @@ export async function getNewsSummary() {
     .join("\n\n");
 }
 
-const items = await getNewsSummary();
-await ArticleGen(items);
+try {
+  await redis.connect();
+  const items = await getNewsSummary();
+  await ArticleGen(items);
+} catch (error) {
+  exitCode = 1;
+  console.error(error);
+} finally {
+  if (redis.isOpen) await redis.quit();
+  process.exit(exitCode);
+}

@@ -9,7 +9,7 @@ process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
 const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 const redis = createClient({ url: redisUrl });
-await redis.connect();
+let exitCode = 0;
 
 export async function getNewsSummary(region) {
   const regionNews = await redis.lRange(`newsCollection:${region}`, 0, -1);
@@ -67,15 +67,24 @@ async function computeAndStoreRegion(region) {
   return { output, computed, stabilitySummary };
 }
 
-const world = await computeAndStoreRegion("World");
-const india = await computeAndStoreRegion("India");
+try {
+  await redis.connect();
+  const world = await computeAndStoreRegion("World");
+  const india = await computeAndStoreRegion("India");
 
-console.log({
-  World: world.stabilitySummary,
-  India: india.stabilitySummary,
-});
+  console.log({
+    World: world.stabilitySummary,
+    India: india.stabilitySummary,
+  });
 
-// Backward-compatible keys currently used by existing consumers.
-await redis.set("stability_summary", JSON.stringify(world.stabilitySummary));
-await redis.rPush("stability_score", JSON.stringify(world.computed?.stability_score));
-await redis.lTrim("stability_score", -5, -1);
+  // Backward-compatible keys currently used by existing consumers.
+  await redis.set("stability_summary", JSON.stringify(world.stabilitySummary));
+  await redis.rPush("stability_score", JSON.stringify(world.computed?.stability_score));
+  await redis.lTrim("stability_score", -5, -1);
+} catch (error) {
+  exitCode = 1;
+  console.error(error);
+} finally {
+  if (redis.isOpen) await redis.quit();
+  process.exit(exitCode);
+}
