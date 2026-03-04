@@ -69,7 +69,9 @@ export const SaveArticle = tool({
   description: "Save the Article you have extracted",
   inputSchema: z.object({
     article: z.object({
-      title: z.string().describe("Nice Editorial Headline"),
+      title: z
+        .string()
+        .describe("Nice Editorial Headline, Should be around 4-5 words only."),
       newsContent: z.string().describe("Content of the article in markdown"),
     }),
   }),
