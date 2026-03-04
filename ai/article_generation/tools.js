@@ -16,7 +16,7 @@ function getRedisClient() {
 
 export const itemTool = tool({
   description:
-    "Select up to 10 most important stories for the primary marquee/news feed.",
+    "Select up to 20 most important stories for the primary marquee/news feed.",
   inputSchema: z.object({
     newsItems: z
       .array(
@@ -26,7 +26,7 @@ export const itemTool = tool({
             "News Item. Concise headline-style phrase, ideally <= 95 character",
           ),
       )
-      .max(10),
+      .max(20),
   }),
   execute: async ({ newsItems }) => {
     const redis = await getRedisClient();
