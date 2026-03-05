@@ -54,3 +54,59 @@ export const ArticleTool = tool({
     return { articles };
   },
 });
+
+export const Coordinates = tool({
+  description:
+    "Persist map-ready coordinates for conflict, weather, and concern locations. Each point must use decimal degrees with latitude first and longitude second.",
+  inputSchema: z.object({
+    conflict: z.array(
+      z.object({
+        latitude: z
+          .number()
+          .min(-90)
+          .max(90)
+          .describe("Latitude in decimal degrees, range -90 to 90."),
+        longitude: z
+          .number()
+          .min(-180)
+          .max(180)
+          .describe("Longitude in decimal degrees, range -180 to 180."),
+      }),
+    ),
+    weather: z.array(
+      z.object({
+        latitude: z
+          .number()
+          .min(-90)
+          .max(90)
+          .describe("Latitude in decimal degrees, range -90 to 90."),
+        longitude: z
+          .number()
+          .min(-180)
+          .max(180)
+          .describe("Longitude in decimal degrees, range -180 to 180."),
+      }),
+    ),
+    concern: z.array(
+      z.object({
+        latitude: z
+          .number()
+          .min(-90)
+          .max(90)
+          .describe("Latitude in decimal degrees, range -90 to 90."),
+        longitude: z
+          .number()
+          .min(-180)
+          .max(180)
+          .describe("Longitude in decimal degrees, range -180 to 180."),
+      }),
+    ),
+  }),
+  execute: async ({ conflict, weather, concern }) => {
+    const coordinates = { conflict, weather, concern };
+    const redis = await getRedisClient();
+    await redis.set("Coordinates", JSON.stringify(coordinates));
+    console.log(coordinates);
+    return coordinates;
+  },
+});
