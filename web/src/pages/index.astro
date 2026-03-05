@@ -36,6 +36,8 @@ const telegramData = await safeJson('/v1/telegram');
 				INTEL
 			</h1>
 
+			<IndiaMap client:only="react" />
+
 			<div class="mx-auto mt-5 w-full max-w-[80rem]">
 				<NewsMarquee newsItems={marqueeData} client:only="react" />
 			</div>
@@ -46,7 +48,6 @@ const telegramData = await safeJson('/v1/telegram');
 			</section>
 
 			<BreakingNewsFeed newsData={breakingNewsData} client:only="react" />
-			<IndiaMap client:only="react" />
 			<TelegramOsint telegramData={telegramData} />
 		</div>
 	</main>
