@@ -2,7 +2,7 @@ import { generateText, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { ArticleTool, itemTool } from "./tools.js";
+import { ArticleTool, Coordinates, itemTool } from "./tools.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
@@ -14,7 +14,7 @@ const openai = createOpenAI({ apiKey });
 export default async function ArticleGen(items) {
   const result = await generateText({
     model: openai("gpt-5.2"),
-    tools: { itemTool, ArticleTool },
+    tools: { itemTool, ArticleTool, Coordinates },
     stopWhen: stepCountIs(5),
     prompt: `You are a senior news editor selecting article candidates.
 
@@ -28,12 +28,19 @@ Tasks:
    - initialData: a compact synthesis of known facts from the input (what happened, who/where, and immediate significance).
 3) Call ArticleTool exactly once with the final selected stories.
 4) call itemTool once if you also identify marquee-worthy headline items, with upto 20 headlines.
+5) Call Coordinates exactly once with this shape:
+   - conflict: [{ latitude, longitude }]
+   - weather: [{ latitude, longitude }]
+   - concern: [{ latitude, longitude }]
+   Use decimal degrees and Leaflet order semantics (latitude first, longitude second).
+   Include only coordinates that are clearly supported by the input locations; if none are clear for a category, return an empty array for that category.
 
 Constraints:
 - Keep phrasing precise and scannable.
 - Prefer present tense where natural.
 - Do not invent facts beyond the provided items.
-- Keep stories distinct; avoid near-duplicate angles.`,
+- Keep stories distinct; avoid near-duplicate angles.
+- Coordinates must be numeric and valid geographic values.`,
   });
 
   return result;
