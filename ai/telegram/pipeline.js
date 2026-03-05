@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 import { TelegramSummary } from "./telegram.js";
 import { syncTelegramChannels } from "./channel.js";
@@ -17,6 +17,25 @@ function redisValueToString(value) {
   return null;
 }
 
+async function closeWithTimeout(task, label, timeoutMs = 8000) {
+  let timer;
+  try {
+    await Promise.race([
+      task(),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } catch (error) {
+    console.warn(`[telegram/pipeline] ${label} warning:`, error?.message || error);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function extractOnlyText(store) {
   const channels = Array.isArray(store?.channels) ? store.channels : [];
   return channels
@@ -27,31 +46,44 @@ function extractOnlyText(store) {
     .join("\n\n");
 }
 
-const redis = createClient({ url: redisUrl });
-let exitCode = 0;
+export async function runTelegramPipeline() {
+  const redis = createClient({ url: redisUrl });
 
-try {
-  await syncTelegramChannels(process.argv.slice(2));
-  await redis.connect();
+  try {
+    await syncTelegramChannels();
+    await redis.connect();
 
-  const newRaw = await redis.get(redisNewKey);
-  const dedupRaw = await redis.get(redisKey);
+    const newRaw = await redis.get(redisNewKey);
+    const dedupRaw = await redis.get(redisKey);
 
-  const newStoreRaw = redisValueToString(newRaw);
-  const dedupStoreRaw = redisValueToString(dedupRaw);
+    const newStoreRaw = redisValueToString(newRaw);
+    const dedupStoreRaw = redisValueToString(dedupRaw);
 
-  const newStore = newStoreRaw ? JSON.parse(newStoreRaw) : null;
-  const dedupStore = dedupStoreRaw ? JSON.parse(dedupStoreRaw) : null;
+    const newStore = newStoreRaw ? JSON.parse(newStoreRaw) : null;
+    const dedupStore = dedupStoreRaw ? JSON.parse(dedupStoreRaw) : null;
 
-  const newText = extractOnlyText(newStore);
-  const dedupText = extractOnlyText(dedupStore);
-  const inputText = newText || dedupText;
+    const newText = extractOnlyText(newStore);
+    const dedupText = extractOnlyText(dedupStore);
+    const inputText = newText || dedupText;
 
-  await TelegramSummary(inputText);
-} catch (error) {
-  exitCode = 1;
-  console.error(error);
-} finally {
-  if (redis.isOpen) await redis.quit();
-  process.exit(exitCode);
+    await TelegramSummary(inputText);
+  } finally {
+    if (redis.isOpen) {
+      await closeWithTimeout(() => redis.quit(), "redis quit");
+    }
+  }
+}
+
+const isMain =
+  process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
+
+if (isMain) {
+  runTelegramPipeline()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
 }
