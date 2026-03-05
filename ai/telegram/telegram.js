@@ -1,5 +1,5 @@
 import { generateText, stepCountIs } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { SaveTool } from "./tools.js";
@@ -7,12 +7,12 @@ import { SaveTool } from "./tools.js";
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
-const apiKey = process.env.OPENAI_API_KEY;
+const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) {
-  throw new Error("Missing OPENAI_API_KEY environment variable.");
+  throw new Error("Missing OPENROUTER environment variable.");
 }
 
-const openai = createOpenAI({ apiKey });
+const openrouter = createOpenRouter({ apiKey });
 
 export async function TelegramSummary(inputText) {
   const cleanInput = (inputText || "").trim();
@@ -21,7 +21,7 @@ export async function TelegramSummary(inputText) {
   }
 
   await generateText({
-    model: openai("gpt-5.2"),
+    model: openrouter("openrouter/free"),
     tools: { SaveTool },
     stopWhen: stepCountIs(3),
     prompt: `You are a world news editor. Extract clear, non-duplicate news items from raw Telegram messages.
