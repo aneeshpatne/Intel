@@ -54,18 +54,18 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  A[Telegram channels\nTG_CHANNEL_LINKS or defaults] --> B[syncTelegramChannels]
-  B --> C[telegram:dedup:latest20]
-  B --> D[telegram:new:latest20]
-  D --> E[TelegramSummary with GPT]
+  A["Telegram channels<br/>TG_CHANNEL_LINKS or defaults"] --> B["syncTelegramChannels"]
+  B --> C["telegram:dedup:latest20"]
+  B --> D["telegram:new:latest20"]
+  D --> E["TelegramSummary with GPT"]
   C --> E
-  E --> F[Telegram-Info / Telegram-Desc]
+  E --> F["Telegram-Info and Telegram-Desc"]
 
-  G[newsCollection + newsCollection:India/World\nupstream producer required] --> H[Article selection + Stability scoring]
+  G["newsCollection and newsCollection:India/World<br/>upstream producer required"] --> H["Article selection and stability scoring"]
 
-  I[DEEP_SEARCH_URL API\nquery -> URL list] --> J[WebSearchTool]
-  J --> K[Playwright scrape(urls)]
-  K --> L[savedArticles + source URLs + ogImage]
+  I["DEEP_SEARCH_URL API<br/>query to URL list"] --> J["WebSearchTool"]
+  J --> K["Playwright scrape URLs"]
+  K --> L["savedArticles plus source URLs plus ogImage"]
 ```
 
 Notes:
@@ -77,30 +77,30 @@ Notes:
 ```mermaid
 flowchart LR
   subgraph Producers
-    P1[Telegram SaveTool]
-    P2[Article selection tools]
-    P3[Deep search SaveArticle]
-    P4[Stability pipeline]
+    P1["Telegram SaveTool"]
+    P2["Article selection tools"]
+    P3["Deep search SaveArticle"]
+    P4["Stability pipeline"]
   end
 
   subgraph Keys
-    K1[Telegram-Info]
-    K2[Telegram-Desc]
-    K3[newsMarquee]
-    K4[selectedArticles]
-    K5[Coordinates]
-    K6[savedArticles]
-    K7[stability_summary:India]
-    K8[stability_summary:World]
-    K9[stability_score:India/World]
+    K1["Telegram-Info"]
+    K2["Telegram-Desc"]
+    K3["newsMarquee"]
+    K4["selectedArticles"]
+    K5["Coordinates"]
+    K6["savedArticles"]
+    K7["stability_summary:India"]
+    K8["stability_summary:World"]
+    K9["stability_score:India/World"]
   end
 
   subgraph API
-    A1[/v1/telegram]
-    A2[/v1/marquee]
-    A3[/v1/coordinates]
-    A4[/v1/breaking-news]
-    A5[/v1/stability/:region]
+    A1["GET /v1/telegram"]
+    A2["GET /v1/marquee"]
+    A3["GET /v1/coordinates"]
+    A4["GET /v1/breaking-news"]
+    A5["GET /v1/stability/:region"]
   end
 
   P1 --> K1 --> A1
