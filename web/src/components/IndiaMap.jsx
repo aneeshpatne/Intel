@@ -34,7 +34,7 @@ export default function IndiaMap({ conflict = [], weather = [], concern = [] }) 
 
       <MapContainer
         center={[20, 0]}
-        zoom={2}
+        zoom={2.4}
         style={{ height: "500px", width: "100%" }}
         scrollWheelZoom={false}
         zoomControl={false}
@@ -43,19 +43,34 @@ export default function IndiaMap({ conflict = [], weather = [], concern = [] }) 
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
-        {conflict.map((position, index) => (
-          <Marker key={`conflict-${index}`} position={position} icon={conflictMarkerIcon}>
-            <Popup>Conflict marker</Popup>
+        {conflict.map((item, index) => (
+          <Marker key={`conflict-${index}`} position={item.position} icon={conflictMarkerIcon}>
+            <Popup className="intel-popup">
+              <div className="intel-popup-content">
+                <p className="intel-popup-label">Conflict</p>
+                <p className="intel-popup-text">{item.comment || "Conflict marker"}</p>
+              </div>
+            </Popup>
           </Marker>
         ))}
-        {weather.map((position, index) => (
-          <Marker key={`weather-${index}`} position={position} icon={weatherMarkerIcon}>
-            <Popup>Weather marker</Popup>
+        {weather.map((item, index) => (
+          <Marker key={`weather-${index}`} position={item.position} icon={weatherMarkerIcon}>
+            <Popup className="intel-popup">
+              <div className="intel-popup-content">
+                <p className="intel-popup-label">Weather</p>
+                <p className="intel-popup-text">{item.comment || "Weather marker"}</p>
+              </div>
+            </Popup>
           </Marker>
         ))}
-        {concern.map((position, index) => (
-          <Marker key={`concern-${index}`} position={position} icon={redTriangleIcon}>
-            <Popup>Concern marker</Popup>
+        {concern.map((item, index) => (
+          <Marker key={`concern-${index}`} position={item.position} icon={redTriangleIcon}>
+            <Popup className="intel-popup">
+              <div className="intel-popup-content">
+                <p className="intel-popup-label">Concern</p>
+                <p className="intel-popup-text">{item.comment || "Concern marker"}</p>
+              </div>
+            </Popup>
           </Marker>
         ))}
       </MapContainer>

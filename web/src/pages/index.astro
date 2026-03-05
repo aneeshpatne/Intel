@@ -33,13 +33,22 @@ let coordinatesDataFormatted = {
 if (coordinatesData && typeof coordinatesData === 'object') {
 	coordinatesDataFormatted = {
 		conflict: Array.isArray(coordinatesData.conflict)
-			? coordinatesData.conflict.map((item) => [item?.latitude, item?.longitude])
+			? coordinatesData.conflict.map((item) => ({
+					position: [item?.latitude, item?.longitude],
+					comment: item?.comment ?? '',
+				}))
 			: [],
 		weather: Array.isArray(coordinatesData.weather)
-			? coordinatesData.weather.map((item) => [item?.latitude, item?.longitude])
+			? coordinatesData.weather.map((item) => ({
+					position: [item?.latitude, item?.longitude],
+					comment: item?.comment ?? '',
+				}))
 			: [],
 		concern: Array.isArray(coordinatesData.concern)
-			? coordinatesData.concern.map((item) => [item?.latitude, item?.longitude])
+			? coordinatesData.concern.map((item) => ({
+					position: [item?.latitude, item?.longitude],
+					comment: item?.comment ?? '',
+				}))
 			: [],
 	};
 }
