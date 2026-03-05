@@ -36,11 +36,10 @@ const telegramData = await safeJson('/v1/telegram');
 				INTEL
 			</h1>
 
-			<IndiaMap client:only="react" />
-
 			<div class="mx-auto mt-5 w-full max-w-[80rem]">
 				<NewsMarquee newsItems={marqueeData} client:only="react" />
 			</div>
+			<IndiaMap client:only="react" />
 
 			<section class="mx-auto mt-8 grid w-full max-w-[80rem] gap-6 md:grid-cols-2 xl:gap-8">
 				<StabilityPanels label="India" panelData={indiaData} client:only="react" />
