@@ -21,7 +21,7 @@ export async function TelegramSummary(inputText) {
   }
 
   await generateText({
-    model: openai("gpt-5.2"),
+    model: openai("gpt-5-mini"),
     tools: { SaveTool },
     stopWhen: stepCountIs(3),
     prompt: `You are a world news editor. Extract clear, non-duplicate news items from raw Telegram messages.
