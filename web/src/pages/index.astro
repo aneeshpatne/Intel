@@ -23,6 +23,27 @@ const indiaData = await safeJson('/v1/stability/India');
 const worldData = await safeJson('/v1/stability/World');
 const breakingNewsData = await safeJson('/v1/breaking-news');
 const telegramData = await safeJson('/v1/telegram');
+const coordinatesData = await safeJson('/v1/coordinates');
+console.log(coordinatesData);
+let coordinatesDataFormatted = {
+	conflict: [],
+	weather: [],
+	concern: [],
+};
+if (coordinatesData && typeof coordinatesData === 'object') {
+	coordinatesDataFormatted = {
+		conflict: Array.isArray(coordinatesData.conflict)
+			? coordinatesData.conflict.map((item) => [item?.latitude, item?.longitude])
+			: [],
+		weather: Array.isArray(coordinatesData.weather)
+			? coordinatesData.weather.map((item) => [item?.latitude, item?.longitude])
+			: [],
+		concern: Array.isArray(coordinatesData.concern)
+			? coordinatesData.concern.map((item) => [item?.latitude, item?.longitude])
+			: [],
+	};
+}
+console.log(coordinatesDataFormatted);
 ---
 
 <Layout title="INTEL">
@@ -39,7 +60,12 @@ const telegramData = await safeJson('/v1/telegram');
 			<div class="mx-auto mt-5 w-full max-w-[80rem]">
 				<NewsMarquee newsItems={marqueeData} client:only="react" />
 			</div>
-			<IndiaMap client:only="react" />
+			<IndiaMap
+				conflict={coordinatesDataFormatted.conflict}
+				weather={coordinatesDataFormatted.weather}
+				concern={coordinatesDataFormatted.concern}
+				client:only="react"
+			/>
 
 			<section class="mx-auto mt-8 grid w-full max-w-[80rem] gap-6 md:grid-cols-2 xl:gap-8">
 				<StabilityPanels label="India" panelData={indiaData} client:only="react" />

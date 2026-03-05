@@ -71,6 +71,7 @@ export const Coordinates = tool({
           .min(-180)
           .max(180)
           .describe("Longitude in decimal degrees, range -180 to 180."),
+        comment: z.string().describe("Small description of the event"),
       }),
     ),
     weather: z.array(
@@ -85,6 +86,7 @@ export const Coordinates = tool({
           .min(-180)
           .max(180)
           .describe("Longitude in decimal degrees, range -180 to 180."),
+        comment: z.string().describe("Small description of the event"),
       }),
     ),
     concern: z.array(
@@ -99,6 +101,7 @@ export const Coordinates = tool({
           .min(-180)
           .max(180)
           .describe("Longitude in decimal degrees, range -180 to 180."),
+        comment: z.string().describe("Small description of the event"),
       }),
     ),
   }),

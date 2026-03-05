@@ -23,7 +23,7 @@ const weatherMarkerIcon = L.divIcon({
   iconAnchor: [3, 3],
 });
 
-export default function IndiaMap() {
+export default function IndiaMap({ conflict = [], weather = [], concern = [] }) {
   return (
     <section className="mx-auto mt-8 w-full max-w-[80rem] border border-zinc-800/80 bg-[#090c12] p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between border-b border-zinc-800/90 pb-4">
@@ -43,15 +43,21 @@ export default function IndiaMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
-        <Marker position={[28.6139, 77.209]} icon={redTriangleIcon}>
-          <Popup>Delhi</Popup>
-        </Marker>
-        <Marker position={[33.3152, 44.3661]} icon={conflictMarkerIcon}>
-          <Popup>Conflict marker</Popup>
-        </Marker>
-        <Marker position={[51.5072, -0.1276]} icon={weatherMarkerIcon}>
-          <Popup>Weather marker</Popup>
-        </Marker>
+        {conflict.map((position, index) => (
+          <Marker key={`conflict-${index}`} position={position} icon={conflictMarkerIcon}>
+            <Popup>Conflict marker</Popup>
+          </Marker>
+        ))}
+        {weather.map((position, index) => (
+          <Marker key={`weather-${index}`} position={position} icon={weatherMarkerIcon}>
+            <Popup>Weather marker</Popup>
+          </Marker>
+        ))}
+        {concern.map((position, index) => (
+          <Marker key={`concern-${index}`} position={position} icon={redTriangleIcon}>
+            <Popup>Concern marker</Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </section>
   );
