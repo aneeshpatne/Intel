@@ -25,6 +25,26 @@ app.get("/v1/marquee", async (_req, res) => {
   }
 });
 
+app.get("/v1/coordinates", async (_req, res) => {
+  const data = await redisClient.get("Coordinates");
+  if (!data) {
+    return res.status(404).json({
+      error: "Not Found",
+      message: "No coordinates data found",
+    });
+  }
+
+  const coordinatesText =
+    typeof data === "string" ? data : data.toString("utf8");
+
+  try {
+    const parsed = JSON.parse(coordinatesText);
+    return res.status(200).json(parsed);
+  } catch {
+    return res.status(200).json([]);
+  }
+});
+
 app.get("/v1/telegram", async (_req, res) => {
   const data = await redisClient.get("Telegram-Info");
   if (!data || data.length === 0) {
