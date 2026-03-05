@@ -14,30 +14,30 @@ A multi-stage intelligence pipeline that ingests Telegram OSINT + web search con
 ## System Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
   subgraph Sources
-    TG[Telegram Channels]
-    NS[News Search Service\nDEEP_SEARCH_URL]
-    WEB[Publisher Websites]
+    TG["Telegram Channels"]
+    NS["News Search Service<br/>DEEP_SEARCH_URL"]
+    WEB["Publisher Websites"]
   end
 
-  subgraph AI_Pipelines[AI Pipelines]
-    ORCH[ai/orchestrator.js\nBullMQ cron]
-    TCH[telegram/channel.js\nFetch + dedup]
-    TSUM[telegram/telegram.js\nGPT extraction]
-    ASEL[article_generation/article-gen.js\nGPT selection]
-    DSRCH[deep_search/ai.js\nGPT article writer]
-    SCR[scrape.js\nPlaywright scraper]
-    STAB[stability-index/pipeline.js\nRisk + index]
+  subgraph AI_Pipelines["AI Pipelines"]
+    ORCH["ai/orchestrator.js<br/>BullMQ cron"]
+    TCH["telegram/channel.js<br/>Fetch and dedup"]
+    TSUM["telegram/telegram.js<br/>GPT extraction"]
+    ASEL["article_generation/article-gen.js<br/>GPT selection"]
+    DSRCH["deep_search/ai.js<br/>GPT article writer"]
+    SCR["scrape.js<br/>Playwright scraper"]
+    STAB["stability-index/pipeline.js<br/>Risk and index"]
   end
 
-  subgraph Data[Redis]
-    R[(Redis Keys)]
+  subgraph Data["Redis"]
+    R[("Redis Keys")]
   end
 
-  subgraph Serving[Serving Layer]
-    API[server/server.js\nExpress API]
-    WEBAPP[web/\nAstro + React]
+  subgraph Serving["Serving Layer"]
+    API["server/server.js<br/>Express API"]
+    WEBAPP["web/<br/>Astro and React"]
   end
 
   TG --> TCH --> TSUM --> R
