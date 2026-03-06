@@ -8,6 +8,18 @@ const redisClient = createClient();
 redisClient.on("error", (error) => console.error("Redis client error:", error));
 await redisClient.connect();
 
+function parseJsonList(items) {
+  return items
+    .map((item) => {
+      try {
+        return JSON.parse(item);
+      } catch {
+        return null;
+      }
+    })
+    .filter((item) => item !== null);
+}
+
 app.get("/v1/marquee", async (_req, res) => {
   const marquee = await redisClient.get("newsMarquee");
   if (!marquee) {
@@ -26,23 +38,24 @@ app.get("/v1/marquee", async (_req, res) => {
 });
 
 app.get("/v1/coordinates", async (_req, res) => {
-  const data = await redisClient.get("Coordinates");
-  if (!data) {
+  const [conflictItems, weatherItems, concernItems] = await Promise.all([
+    redisClient.lRange("coords:conflict", 0, -1),
+    redisClient.lRange("coords:weather", 0, -1),
+    redisClient.lRange("coords:concern", 0, -1),
+  ]);
+
+  if (!conflictItems.length && !weatherItems.length && !concernItems.length) {
     return res.status(404).json({
       error: "Not Found",
       message: "No coordinates data found",
     });
   }
 
-  const coordinatesText =
-    typeof data === "string" ? data : data.toString("utf8");
-
-  try {
-    const parsed = JSON.parse(coordinatesText);
-    return res.status(200).json(parsed);
-  } catch {
-    return res.status(200).json([]);
-  }
+  return res.status(200).json({
+    conflict: parseJsonList(conflictItems),
+    weather: parseJsonList(weatherItems),
+    concern: parseJsonList(concernItems),
+  });
 });
 
 app.get("/v1/telegram", async (_req, res) => {
