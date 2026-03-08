@@ -1,5 +1,5 @@
 import { generateText, stepCountIs } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { SaveArticle, WebSearchTool } from "./tools.js";
@@ -7,16 +7,16 @@ import { SaveArticle, WebSearchTool } from "./tools.js";
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
-const apiKey = process.env.OPENAI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
-  throw new Error("Missing OPENAI_API_KEY environment variable.");
+  throw new Error("Missing GEMINI_API_KEY environment variable.");
 }
 
-const openai = createOpenAI({ apiKey });
+const google = createGoogleGenerativeAI({ apiKey });
 
 export async function Article(topic, initialData = "") {
   const { text } = await generateText({
-    model: openai("gpt-5-mini"),
+    model: google("gemini-3.1-flash-lite-preview"),
     stopWhen: stepCountIs(8),
     tools: { WebSearchTool, SaveArticle },
     prompt: `You are a senior world-news writer.
