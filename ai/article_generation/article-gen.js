@@ -1,5 +1,5 @@
 import { generateText, stepCountIs } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { ArticleTool, Coordinates, itemTool } from "./tools.js";
@@ -7,13 +7,16 @@ import { ArticleTool, Coordinates, itemTool } from "./tools.js";
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
-const apiKey = process.env.OPENAI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("Missing GEMINI_API_KEY environment variable.");
+}
 
-const openai = createOpenAI({ apiKey });
+const google = createGoogleGenerativeAI({ apiKey });
 
 export default async function ArticleGen(items) {
   const result = await generateText({
-    model: openai("gpt-5.2"),
+    model: google("gemini-3.1-flash-lite-preview"),
     tools: { itemTool, ArticleTool, Coordinates },
     stopWhen: stepCountIs(5),
     prompt: `You are a senior news editor selecting article candidates.
