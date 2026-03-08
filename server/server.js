@@ -39,7 +39,7 @@ app.get("/v1/marquee", async (_req, res) => {
 
 app.get("/v1/coordinates", async (_req, res) => {
   const [conflictItems, weatherItems, concernItems] = await Promise.all([
-    redisClient.lRange("coords:conflict", 0, -1),
+    redisClient.lRange("coordinate:conflict", 0, -1),
     redisClient.lRange("coords:weather", 0, -1),
     redisClient.lRange("coords:concern", 0, -1),
   ]);
