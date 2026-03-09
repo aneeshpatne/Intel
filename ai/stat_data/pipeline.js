@@ -2,6 +2,7 @@ import { createClient } from "redis";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import DataGen from "./ai.js";
+import DataGenSarvam from "./ai_sarvam.js";
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
 
@@ -30,7 +31,7 @@ export async function getNewsSummary() {
 try {
   await redis.connect();
   const items = await getNewsSummary();
-  await DataGen(items);
+  await DataGenSarvam(items);
 } catch (error) {
   exitCode = 1;
   console.error(error);
