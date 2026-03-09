@@ -1,10 +1,16 @@
 import { createClient } from "redis";
 import express from "express";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+process.loadEnvFile(path.resolve(currentDir, "../ai/.env"));
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 8006);
 
-const redisClient = createClient();
+const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+const redisClient = createClient({ url: redisUrl });
 redisClient.on("error", (error) => console.error("Redis client error:", error));
 await redisClient.connect();
 
