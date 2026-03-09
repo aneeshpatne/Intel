@@ -36,7 +36,12 @@ const COLOR_MAP = {
  * @returns {AlertColor}
  */
 function normalizeAlertColor(value) {
-  if (value === "yellow" || value === "orange" || value === "red" || value === "green") {
+  if (
+    value === "yellow" ||
+    value === "orange" ||
+    value === "red" ||
+    value === "green"
+  ) {
     return value;
   }
   return "yellow";
@@ -51,7 +56,9 @@ function normalizeData(value) {
   const typed = /** @type {Record<string, unknown>} */ (value);
 
   return {
-    score: Number.isFinite(typed.score) ? /** @type {number} */ (typed.score) : 0,
+    score: Number.isFinite(typed.score)
+      ? /** @type {number} */ (typed.score)
+      : 0,
     top_risk_factors: Array.isArray(typed.top_risk_factors)
       ? /** @type {string[]} */ (typed.top_risk_factors)
       : [],
@@ -72,8 +79,18 @@ function ScoreRing({ score, color }) {
   const dash = (clamped / 100) * circumference;
 
   return (
-    <svg viewBox="0 0 120 120" className="h-[92px] w-[92px] shrink-0 sm:h-[112px] sm:w-[112px]">
-      <circle cx="60" cy="60" r="44" fill="none" stroke="#18181b" strokeWidth="6" />
+    <svg
+      viewBox="0 0 120 120"
+      className="h-[92px] w-[92px] shrink-0 sm:h-[112px] sm:w-[112px] drop-shadow-lg"
+    >
+      <circle
+        cx="60"
+        cy="60"
+        r="44"
+        fill="none"
+        stroke="rgba(255,255,255,0.05)"
+        strokeWidth="6"
+      />
       <circle
         cx="60"
         cy="60"
@@ -81,11 +98,18 @@ function ScoreRing({ score, color }) {
         fill="none"
         stroke={color}
         strokeWidth="6"
-        strokeLinecap="square"
+        strokeLinecap="round"
         strokeDasharray={`${dash} ${circumference}`}
         transform="rotate(-90 60 60)"
+        className="transition-all duration-1000 ease-out"
+        style={{ filter: `drop-shadow(0 0 6px ${color}66)` }}
       />
-      <text x="60" y="67" textAnchor="middle" className="fill-zinc-100 text-[26px] font-bold tracking-tight">
+      <text
+        x="60"
+        y="67"
+        textAnchor="middle"
+        className="fill-white text-[28px] font-semibold tracking-tight"
+      >
         {clamped.toFixed(1)}
       </text>
     </svg>
@@ -107,7 +131,10 @@ export default function StabilityPanels({ label, panelData }) {
   const riskItems = data.top_risk_factors;
   const stabilizerItems = data.top_stabilizers;
 
-  const riskText = riskItems.length > 0 ? riskItems[step % riskItems.length] : "No risk factor data";
+  const riskText =
+    riskItems.length > 0
+      ? riskItems[step % riskItems.length]
+      : "No risk factor data";
   const stabilizerText =
     stabilizerItems.length > 0
       ? stabilizerItems[step % stabilizerItems.length]
@@ -117,15 +144,26 @@ export default function StabilityPanels({ label, panelData }) {
   const isUp = String(data.trend).toLowerCase() === "up";
 
   return (
-    <article className="group relative border border-zinc-800/80 bg-transparent p-6 transition-all duration-500 hover:border-zinc-500/80 hover:bg-zinc-900/10 sm:p-8">
-      <div className="flex items-start justify-between border-b border-zinc-800/80 pb-6 transition-colors duration-500 group-hover:border-zinc-700">
+    <article className="glass-panel glass-panel-hover group relative rounded-3xl p-6 sm:p-8 overflow-hidden bg-white/[0.01] border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
+      {/* Ambient panel glow */}
+      <div className="absolute -inset-x-20 -top-20 h-40 w-full bg-white/[0.02] blur-3xl rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-100 opacity-50"></div>
+
+      <div className="relative flex items-start justify-between border-b border-white/[0.06] pb-6 transition-colors duration-500 group-hover:border-white/[0.12]">
         <div className="flex flex-col justify-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">{label} Region</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-wide text-zinc-100">Stability Index</h2>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-zinc-400 drop-shadow-sm">
+            {label} Region
+          </p>
+          <h2 className="intel-title-font mt-2 text-5xl font-light tracking-wide text-zinc-100 drop-shadow-sm">
+            Stability Index
+          </h2>
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Trend</span>
-            <div className="h-px w-6 bg-zinc-700 transition-colors duration-500 group-hover:bg-zinc-500"></div>
-            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isUp ? "text-[#eab308]" : "text-zinc-300"}`}>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+              Trend
+            </span>
+            <div className="h-px w-8 bg-zinc-700 transition-colors duration-500 group-hover:bg-zinc-500"></div>
+            <span
+              className={`text-[11px] font-bold uppercase tracking-[0.2em] ${isUp ? "text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]" : "text-zinc-300"}`}
+            >
               {data.trend}
             </span>
           </div>
@@ -135,21 +173,35 @@ export default function StabilityPanels({ label, panelData }) {
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-px border border-zinc-800/80 bg-zinc-800/80 transition-colors duration-500 group-hover:border-zinc-700/80 group-hover:bg-zinc-700/80 md:grid-cols-2">
-        <div className="bg-[#07090d] p-6 transition-colors duration-500 group-hover:bg-[#0a0d14]">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="h-2 w-2 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Top Risk Factor</p>
+      <div className="relative mt-8 grid grid-cols-1 gap-[1px] bg-white/[0.06] rounded-2xl overflow-hidden transition-colors duration-500 md:grid-cols-2 shadow-inner">
+        <div className="bg-black/50 backdrop-blur-2xl p-6 transition-colors duration-700 group-hover:bg-black/70 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]"></span>
+            </span>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Top Risk Factor
+            </p>
           </div>
-          <p className="min-h-[48px] text-sm font-medium leading-relaxed text-zinc-200">{riskText}</p>
+          <p className="min-h-[48px] text-[15px] font-light tracking-wide leading-relaxed text-zinc-200">
+            {riskText}
+          </p>
         </div>
 
-        <div className="bg-[#07090d] p-6 transition-colors duration-500 group-hover:bg-[#0a0d14]">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Key Stabilizer</p>
+        <div className="bg-black/50 backdrop-blur-2xl p-6 transition-colors duration-700 group-hover:bg-black/70 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
+            </span>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400">
+              Key Stabilizer
+            </p>
           </div>
-          <p className="min-h-[48px] text-sm font-medium leading-relaxed text-zinc-200">{stabilizerText}</p>
+          <p className="min-h-[48px] text-[15px] font-light tracking-wide leading-relaxed text-zinc-200">
+            {stabilizerText}
+          </p>
         </div>
       </div>
     </article>
