@@ -36,22 +36,22 @@ const ACCENT_MAP = {
   yellow: {
     border: "rgba(234, 179, 8, 0.4)",
     glow: "0 0 10px rgba(234, 179, 8, 0.55)",
-    tint: "rgba(234, 179, 8, 0.08)",
+    tint: "rgba(234, 179, 8, 0.035)",
   },
   orange: {
     border: "rgba(249, 115, 22, 0.4)",
     glow: "0 0 10px rgba(249, 115, 22, 0.55)",
-    tint: "rgba(249, 115, 22, 0.08)",
+    tint: "rgba(249, 115, 22, 0.035)",
   },
   red: {
     border: "rgba(239, 68, 68, 0.4)",
     glow: "0 0 10px rgba(239, 68, 68, 0.55)",
-    tint: "rgba(239, 68, 68, 0.08)",
+    tint: "rgba(239, 68, 68, 0.035)",
   },
   green: {
     border: "rgba(34, 197, 94, 0.4)",
     glow: "0 0 10px rgba(34, 197, 94, 0.55)",
-    tint: "rgba(34, 197, 94, 0.08)",
+    tint: "rgba(34, 197, 94, 0.035)",
   },
 };
 
@@ -175,9 +175,9 @@ export default function StabilityPanels({ label, panelData }) {
     <article
       className="glass-panel glass-panel-hover group relative overflow-hidden rounded-3xl border p-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-3xl sm:p-8"
       style={{
-        backgroundColor: accent.tint,
+        backgroundColor: "rgba(3, 3, 3, 0.78)",
         borderColor: accent.border,
-        boxShadow: `0 8px 32px rgba(0,0,0,0.5), inset 0 0 0 1px ${accent.tint}`,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.5), inset 0 0 0 1px ${accent.tint}, inset 0 24px 80px -56px ${accent.tint}`,
       }}
     >
       <div className="absolute -inset-x-20 -top-20 h-40 w-full rounded-full bg-white/[0.02] opacity-50 blur-3xl transition-opacity duration-700 pointer-events-none group-hover:opacity-100"></div>
@@ -216,7 +216,10 @@ export default function StabilityPanels({ label, panelData }) {
 
       <div
         className="relative mt-8 grid grid-cols-1 gap-[1px] overflow-hidden rounded-2xl border transition-colors duration-500 md:grid-cols-2 shadow-inner"
-        style={{ borderColor: accent.border, backgroundColor: accent.tint }}
+        style={{
+          borderColor: accent.border,
+          backgroundColor: "rgba(255,255,255,0.03)",
+        }}
       >
         <div
           className="flex flex-col gap-4 bg-black/50 p-6 backdrop-blur-2xl transition-colors duration-700 group-hover:bg-black/70"
