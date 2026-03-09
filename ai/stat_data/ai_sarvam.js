@@ -39,9 +39,16 @@ ${items || "No items provided."}
 Workflow:
 1. Read the full digest first and treat each Title/Description pair as one news item.
 2. Identify the strongest, most relevant developments.
-2. Call MarqueeItems exactly once with an array named marquee.
-3. Call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
-4. After tool calls, return a short plain-text summary of what was saved.
+3. You MUST call MarqueeItems exactly once with an array named marquee.
+4. You MUST call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
+5. Both tool calls are mandatory for every run, even if one or more arrays are empty.
+6. Do not end your response until both tools have been called.
+7. After both tool calls, return a short plain-text summary of what was saved.
+
+Hard requirement:
+- This task is incomplete unless both MarqueeItems and CoordinateTool are called.
+- If there is weak signal, still call both tools and pass empty arrays where needed.
+- Never skip either tool.
 
 Rules for MarqueeItems:
 - Save 4 to 12 items when enough signal exists.
