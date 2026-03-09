@@ -6,7 +6,7 @@ import BreakingNewsFeed from '../components/BreakingNewsFeed.jsx';
 import IndiaMap from '../components/IndiaMap.jsx';
 import TelegramOsint from '../components/TelegramOsint.astro';
 
-const BASE_URL = 'http://192.168.0.99:8006';
+const BASE_URL = import.meta.env.PUBLIC_API_BASE_URL || 'http://192.168.0.99:8006';
 
 async function safeJson(path: string) {
 	try {

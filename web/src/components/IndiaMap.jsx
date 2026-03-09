@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { feature } from "topojson-client";
 import "leaflet/dist/leaflet.css";
 
 const redTriangleIcon = L.divIcon({
@@ -23,26 +25,111 @@ const weatherMarkerIcon = L.divIcon({
   iconAnchor: [3, 3],
 });
 
+const INDIA_OUTLINE_URL = "/data/outline_of_india.topo.json";
+
+function toFeatureCollection(source) {
+  if (!source) return null;
+  if (source.type === "FeatureCollection") return source;
+  if (source.type === "Feature") {
+    return { type: "FeatureCollection", features: [source] };
+  }
+  if (Array.isArray(source)) {
+    return {
+      type: "FeatureCollection",
+      features: source.flatMap((item) => toFeatureCollection(item)?.features ?? []),
+    };
+  }
+  if (typeof source === "object") {
+    return {
+      type: "FeatureCollection",
+      features: Object.values(source).flatMap((item) => toFeatureCollection(item)?.features ?? []),
+    };
+  }
+  return null;
+}
+
+function MapControls() {
+  const map = useMap();
+
+  useEffect(() => {
+    const scale = L.control.scale({ imperial: false, position: "bottomleft" });
+    scale.addTo(map);
+
+    return () => {
+      scale.remove();
+    };
+  }, [map]);
+
+  return null;
+}
+
 export default function IndiaMap({ conflict = [], weather = [], concern = [] }) {
+  const [boundaryData, setBoundaryData] = useState(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    fetch(INDIA_OUTLINE_URL)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load India outline");
+        }
+        return response.json();
+      })
+      .then((topology) => {
+        if (!isActive) return;
+        const objectName = Object.keys(topology.objects || {})[0];
+        if (!objectName) {
+          setBoundaryData(null);
+          return;
+        }
+        setBoundaryData(toFeatureCollection(feature(topology, topology.objects[objectName])));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setBoundaryData(null);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <section className="mx-auto mt-8 w-full max-w-[80rem] border border-zinc-800/80 bg-[#090c12] p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between border-b border-zinc-800/90 pb-4">
         <h2 className="text-lg font-semibold uppercase tracking-[0.14em] text-zinc-200">
-          World Map
+          India Map
         </h2>
+        <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+          Survey of India outline
+        </span>
       </div>
 
       <MapContainer
         center={[20, 0]}
         zoom={2.4}
-        style={{ height: "500px", width: "100%" }}
+        style={{ height: "500px", width: "100%", background: "#05070b" }}
         scrollWheelZoom={false}
-        zoomControl={false}
+        zoomControl={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | India outline: <a href="https://surveyofindia.gov.in/documents/Outline_of_India.zip">Survey of India</a>'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
+        <MapControls />
+        {boundaryData?.features?.length ? (
+          <GeoJSON
+            data={boundaryData}
+            style={{
+              color: "#64748b",
+              weight: 0.9,
+              opacity: 0.55,
+              fillColor: "#0b1220",
+              fillOpacity: 0.14,
+            }}
+          />
+        ) : null}
         {conflict.map((item, index) => (
           <Marker key={`conflict-${index}`} position={item.position} icon={conflictMarkerIcon}>
             <Popup className="intel-popup">
