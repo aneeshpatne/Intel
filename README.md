@@ -188,6 +188,8 @@ The current code reads and writes these keys:
 
 ### Consumed from upstream
 
+- [![NewsRoom API](https://img.shields.io/badge/NewsRoom_API-GitHub-181717?logo=github)](https://github.com/aneeshpatne/news_room.git)
+
 - `newsCollection`
   This repo reads this key, and it is populated by the NewsRoom API:
   https://github.com/aneeshpatne/news_room.git
