@@ -39,3 +39,37 @@
   line-height: 1.35;
   color: #f4f4f5 !important;
 }
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+}
+
+.glass-panel-hover {
+  @apply hover:bg-white/[0.04] hover:border-white/[0.15] transition-all duration-500;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030303;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Selection */
+::selection {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
