@@ -31,18 +31,45 @@ const COLOR_MAP = {
   green: "#22c55e",
 };
 
+/** @type {Record<AlertColor, { border: string; glow: string; tint: string }>} */
+const ACCENT_MAP = {
+  yellow: {
+    border: "rgba(234, 179, 8, 0.4)",
+    glow: "0 0 10px rgba(234, 179, 8, 0.55)",
+    tint: "rgba(234, 179, 8, 0.08)",
+  },
+  orange: {
+    border: "rgba(249, 115, 22, 0.4)",
+    glow: "0 0 10px rgba(249, 115, 22, 0.55)",
+    tint: "rgba(249, 115, 22, 0.08)",
+  },
+  red: {
+    border: "rgba(239, 68, 68, 0.4)",
+    glow: "0 0 10px rgba(239, 68, 68, 0.55)",
+    tint: "rgba(239, 68, 68, 0.08)",
+  },
+  green: {
+    border: "rgba(34, 197, 94, 0.4)",
+    glow: "0 0 10px rgba(34, 197, 94, 0.55)",
+    tint: "rgba(34, 197, 94, 0.08)",
+  },
+};
+
 /**
  * @param {unknown} value
  * @returns {AlertColor}
  */
 function normalizeAlertColor(value) {
-  if (
-    value === "yellow" ||
-    value === "orange" ||
-    value === "red" ||
-    value === "green"
-  ) {
-    return value;
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase();
+    if (
+      normalized === "yellow" ||
+      normalized === "orange" ||
+      normalized === "red" ||
+      normalized === "green"
+    ) {
+      return normalized;
+    }
   }
   return "yellow";
 }
@@ -141,14 +168,24 @@ export default function StabilityPanels({ label, panelData }) {
       : "No stabilizer data";
 
   const color = COLOR_MAP[data.alert_color];
+  const accent = ACCENT_MAP[data.alert_color];
   const isUp = String(data.trend).toLowerCase() === "up";
 
   return (
-    <article className="glass-panel glass-panel-hover group relative rounded-3xl p-6 sm:p-8 overflow-hidden bg-white/[0.01] border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
-      {/* Ambient panel glow */}
-      <div className="absolute -inset-x-20 -top-20 h-40 w-full bg-white/[0.02] blur-3xl rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-100 opacity-50"></div>
+    <article
+      className="glass-panel glass-panel-hover group relative overflow-hidden rounded-3xl border p-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-3xl sm:p-8"
+      style={{
+        backgroundColor: accent.tint,
+        borderColor: accent.border,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.5), inset 0 0 0 1px ${accent.tint}`,
+      }}
+    >
+      <div className="absolute -inset-x-20 -top-20 h-40 w-full rounded-full bg-white/[0.02] opacity-50 blur-3xl transition-opacity duration-700 pointer-events-none group-hover:opacity-100"></div>
 
-      <div className="relative flex items-start justify-between border-b border-white/[0.06] pb-6 transition-colors duration-500 group-hover:border-white/[0.12]">
+      <div
+        className="relative flex items-start justify-between border-b pb-6 transition-colors duration-500"
+        style={{ borderBottomColor: accent.border }}
+      >
         <div className="flex flex-col justify-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-zinc-400 drop-shadow-sm">
             {label} Region
@@ -160,9 +197,13 @@ export default function StabilityPanels({ label, panelData }) {
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
               Trend
             </span>
-            <div className="h-px w-8 bg-zinc-700 transition-colors duration-500 group-hover:bg-zinc-500"></div>
+            <div
+              className="h-px w-8 transition-colors duration-500"
+              style={{ backgroundColor: accent.border }}
+            ></div>
             <span
-              className={`text-[11px] font-bold uppercase tracking-[0.2em] ${isUp ? "text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]" : "text-zinc-300"}`}
+              className="text-[11px] font-bold uppercase tracking-[0.2em]"
+              style={{ color: isUp ? color : "#d4d4d8" }}
             >
               {data.trend}
             </span>
@@ -173,12 +214,24 @@ export default function StabilityPanels({ label, panelData }) {
         </div>
       </div>
 
-      <div className="relative mt-8 grid grid-cols-1 gap-[1px] bg-white/[0.06] rounded-2xl overflow-hidden transition-colors duration-500 md:grid-cols-2 shadow-inner">
-        <div className="bg-black/50 backdrop-blur-2xl p-6 transition-colors duration-700 group-hover:bg-black/70 flex flex-col gap-4">
+      <div
+        className="relative mt-8 grid grid-cols-1 gap-[1px] overflow-hidden rounded-2xl border transition-colors duration-500 md:grid-cols-2 shadow-inner"
+        style={{ borderColor: accent.border, backgroundColor: accent.tint }}
+      >
+        <div
+          className="flex flex-col gap-4 bg-black/50 p-6 backdrop-blur-2xl transition-colors duration-700 group-hover:bg-black/70"
+          style={{ boxShadow: `inset 0 1px 0 ${accent.tint}` }}
+        >
           <div className="flex items-center gap-3">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]"></span>
+              <span
+                className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                style={{ backgroundColor: color }}
+              ></span>
+              <span
+                className="relative inline-flex h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: color, boxShadow: accent.glow }}
+              ></span>
             </span>
             <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400">
               Top Risk Factor
@@ -189,11 +242,20 @@ export default function StabilityPanels({ label, panelData }) {
           </p>
         </div>
 
-        <div className="bg-black/50 backdrop-blur-2xl p-6 transition-colors duration-700 group-hover:bg-black/70 flex flex-col gap-4">
+        <div
+          className="flex flex-col gap-4 bg-black/50 p-6 backdrop-blur-2xl transition-colors duration-700 group-hover:bg-black/70"
+          style={{ boxShadow: `inset 0 1px 0 ${accent.tint}` }}
+        >
           <div className="flex items-center gap-3">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
+              <span
+                className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                style={{ backgroundColor: color }}
+              ></span>
+              <span
+                className="relative inline-flex h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: color, boxShadow: accent.glow }}
+              ></span>
             </span>
             <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400">
               Key Stabilizer
