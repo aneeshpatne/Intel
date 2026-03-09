@@ -54,6 +54,7 @@ export const CoordinateTool = tool({
   execute: async ({ conflict, concern, weather }) => {
     const redis = await getRedisClient();
     console.log("Coordinate Tool Invoked");
+    console.log({conflict, concern, weather})
     const payloads = {
       "coordinates:conflict": toCoordinateTuples(conflict),
       "coordinates:concern": toCoordinateTuples(concern),

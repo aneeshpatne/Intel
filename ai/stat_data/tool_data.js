@@ -15,13 +15,14 @@ function getRedisClient() {
 }
 export const MarqueeItems = tool({
   description:
-    "Use this tool to save, news. The saved news items should be less than 60 chars",
+    "Use this tool to save, news. The saved news items should be less than 60 chars. Atleast 20 items must be extracted",
   inputSchema: z.object({
     marquee: z.array(z.string().describe("News Item")),
   }),
   execute: async ({ marquee }) => {
     const redis = await getRedisClient();
     console.log("Marquee Tool Invoked");
+    console.log(marquee);
     if (marquee.length === 0) {
       return "No items to save";
     }
