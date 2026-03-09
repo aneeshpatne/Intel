@@ -24,6 +24,71 @@ Redis ----------------> server/server.js ------------------> HTTP API
 HTTP API -------------> web/src/pages/index.astro ---------> Dashboard UI
 ```
 
+```mermaid
+flowchart TD
+  subgraph Sources
+    TG["Telegram Channels"]
+    NR["NewsRoom API<br/>newsCollection"]
+    DS["Deep Search Service<br/>DEEP_SEARCH_URL"]
+    PUB["Publisher Pages"]
+  end
+
+  subgraph AI["AI Pipelines"]
+    TCH["ai/telegram/channel.js<br/>fetch + dedup"]
+    TPIPE["ai/telegram/pipeline.js<br/>Gemini summarization"]
+    SD["ai/stat_data/pipeline.js<br/>dashboard data extraction"]
+    DSR["ai/deep_search/pipeline.js<br/>article generation"]
+    ORCH["ai/orchestrator.js<br/>BullMQ cron"]
+  end
+
+  subgraph Data
+    R[("Redis")]
+  end
+
+  subgraph Serving
+    API["server/server.js<br/>Express API"]
+    WEB["web/<br/>Astro + React dashboard"]
+  end
+
+  TG --> TCH --> TPIPE --> R
+  ORCH --> TPIPE
+  NR --> SD --> R
+  R --> DSR
+  DSR --> DS --> PUB --> DSR --> R
+  R --> API --> WEB
+```
+
+## Data Flows
+
+```mermaid
+flowchart LR
+  subgraph Telegram
+    T1["Telegram Channels"] --> T2["telegram:dedup:latest20"]
+    T1 --> T3["telegram:new:latest20"]
+    T3 --> T4["TelegramSummary"]
+    T2 --> T4
+    T4 --> T5["Telegram-Info"]
+    T4 --> T6["Telegram-Desc"]
+  end
+
+  subgraph Dashboard
+    N1["NewsRoom API"] --> N2["newsCollection"]
+    N2 --> N3["stat_data/ai.js"]
+    N3 --> N4["marqueeItems"]
+    N3 --> N5["coordinates:*"]
+    N3 --> N6["selectedArticles"]
+    N3 --> N7["stability_summary:India"]
+    N3 --> N8["stability_summary:World"]
+  end
+
+  subgraph Articles
+    A1["selectedArticles"] --> A2["deep_search/pipeline.js"]
+    A2 --> A3["DEEP_SEARCH_URL"]
+    A3 --> A4["scrape publisher pages"]
+    A4 --> A5["savedArticles"]
+  end
+```
+
 ## What Lives Where
 
 ```text
@@ -131,6 +196,48 @@ The current code reads and writes these keys:
 
 - `savedArticles`
   Redis list of article objects with article body, source URLs, and optional OG image.
+
+```mermaid
+flowchart LR
+  subgraph Producers
+    P1["Telegram tools"]
+    P2["stat_data tools"]
+    P3["deep_search tools"]
+  end
+
+  subgraph Keys
+    K1["Telegram-Info"]
+    K2["Telegram-Desc"]
+    K3["marqueeItems"]
+    K4["coordinates:conflict"]
+    K5["coordinates:weather"]
+    K6["coordinates:concern"]
+    K7["selectedArticles"]
+    K8["savedArticles"]
+    K9["stability_summary:India"]
+    K10["stability_summary:World"]
+  end
+
+  subgraph API
+    A1["GET /v1/telegram"]
+    A2["GET /v1/marquee"]
+    A3["GET /v1/coordinates"]
+    A4["GET /v1/breaking-news"]
+    A5["GET /v1/stability/India"]
+    A6["GET /v1/stability/World"]
+  end
+
+  P1 --> K1 --> A1
+  P1 --> K2
+  P2 --> K3 --> A2
+  P2 --> K4 --> A3
+  P2 --> K5 --> A3
+  P2 --> K6 --> A3
+  P2 --> K7
+  P2 --> K9 --> A5
+  P2 --> K10 --> A6
+  P3 --> K8 --> A4
+```
 
 ## API
 
