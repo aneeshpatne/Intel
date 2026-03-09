@@ -1,18 +1,10 @@
 import { tool } from "ai";
 import { createClient } from "redis";
 import { z } from "zod";
+import { computeStabilityIndex } from "./compute_layer.js";
 
+const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
 let redisClientPromise;
-
-function getRedisClient() {
-  if (!redisClientPromise) {
-    const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
-    const client = createClient({ url: redisUrl });
-    redisClientPromise = client.connect().then(() => client);
-  }
-
-  return redisClientPromise;
-}
 
 const assessmentSchema = z.object({
   risk: z.object({
@@ -61,22 +53,49 @@ const assessmentSchema = z.object({
   }),
 });
 
+function getRedisClient() {
+  if (!redisClientPromise) {
+    const client = createClient({ url: redisUrl });
+    redisClientPromise = client.connect().then(() => client);
+  }
+
+  return redisClientPromise;
+}
+
 export const StabilityAssessmentTool = tool({
   description:
-    "Save a structured stability assessment for a region using the stability-index schema.",
+    "Save a structured stability assessment for a region and compute the stability summary.",
   inputSchema: z.object({
-    region: z.string().describe("Region or country name, for example India."),
+    region: z
+      .string()
+      .describe("Region name to process, for example World or India."),
     assessment: assessmentSchema,
   }),
   execute: async ({ region, assessment }) => {
     const redis = await getRedisClient();
-    const payload = {
-      region,
-      assessment,
-      createdAt: new Date().toISOString(),
+    const computed = computeStabilityIndex(assessment);
+    const stabilitySummary = {
+      score: computed?.stability_score,
+      top_risk_factors: assessment?.top_risk_factors ?? [],
+      top_stabilizers: assessment?.top_stabilizers ?? [],
+      trend: assessment?.meta?.trend ?? null,
+      alert_color: assessment?.meta?.alert_color ?? null,
     };
 
-    await redis.set(`stability_assessment:${region}`, JSON.stringify(payload));
-    return payload;
+    await redis.set(
+      `stability_assessment:${region}`,
+      JSON.stringify(assessment),
+    );
+    await redis.set(
+      `stability_summary:${region}`,
+      JSON.stringify(stabilitySummary),
+    );
+    await redis.rPush(
+      `stability_score:${region}`,
+      JSON.stringify(computed?.stability_score),
+    );
+    await redis.lTrim(`stability_score:${region}`, -5, -1);
+
+    return { region, assessment, computed, stabilitySummary };
   },
 });

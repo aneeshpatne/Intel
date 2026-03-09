@@ -30,8 +30,8 @@ Description: ...
 Your job is to extract four kinds of output:
 1. Short marquee headlines for the site's scrolling news strip.
 2. Geolocated event markers for the map.
-3. A structured stability assessment for the World region.
-4. A structured stability assessment for the India region.
+3. A stored stability assessment for the World region.
+4. A stored stability assessment for the India region.
 
 Input digest:
 ${items || "No items provided."}
@@ -43,10 +43,8 @@ Workflow:
 4. Call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
 5. Call StabilityAssessmentTool once with:
    - region: "World"
-   - assessment: the full structured object
 6. Call StabilityAssessmentTool a second time with:
    - region: "India"
-   - assessment: the full structured object
 7. After all tool calls, return a short plain-text summary of what was saved.
 
 Hard requirement:
@@ -72,15 +70,16 @@ Rules for CoordinateTool:
 - If a category has no reliable points, pass an empty array for it.
 
 Rules for StabilityAssessmentTool:
+- Call StabilityAssessmentTool exactly twice in this run: first for World, second for India.
 - Base the assessment only on the provided digest.
 - All numeric scores must be between 0 and 1.
 - Use stronger scores only when the digest shows repeated or high-impact evidence.
 - If evidence is mixed or limited, keep values moderate.
-- Call StabilityAssessmentTool exactly twice in this run: first for World, second for India.
-- For the India call, score only India-specific or India-relevant impact from the digest.
 - top_risk_factors and top_stabilizers must be concise headline-style phrases.
 - trend must be one word only.
 - alert_color must be one of: Red, orange, yellow, Green.
+- Pass the full structured assessment object with each call.
+- For the India call, use region "India". For the global call, use region "World".
 - Use this exact assessment shape:
   {
     risk: {
