@@ -27,6 +27,23 @@ const weatherMarkerIcon = L.divIcon({
 
 const INDIA_OUTLINE_URL = "/data/outline_of_india.topo.json";
 
+function isValidPosition(position) {
+  return (
+    Array.isArray(position) &&
+    position.length === 2 &&
+    typeof position[0] === "number" &&
+    Number.isFinite(position[0]) &&
+    typeof position[1] === "number" &&
+    Number.isFinite(position[1])
+  );
+}
+
+function normalizeMarkers(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items.filter((item) => isValidPosition(item?.position));
+}
+
 function toFeatureCollection(source) {
   if (!source) return null;
   if (source.type === "FeatureCollection") return source;
@@ -65,6 +82,9 @@ function MapControls() {
 
 export default function IndiaMap({ conflict = [], weather = [], concern = [] }) {
   const [boundaryData, setBoundaryData] = useState(null);
+  const conflictMarkers = normalizeMarkers(conflict);
+  const weatherMarkers = normalizeMarkers(weather);
+  const concernMarkers = normalizeMarkers(concern);
 
   useEffect(() => {
     let isActive = true;
@@ -130,7 +150,7 @@ export default function IndiaMap({ conflict = [], weather = [], concern = [] }) 
             }}
           />
         ) : null}
-        {conflict.map((item, index) => (
+        {conflictMarkers.map((item, index) => (
           <Marker key={`conflict-${index}`} position={item.position} icon={conflictMarkerIcon}>
             <Popup className="intel-popup">
               <div className="intel-popup-content">
@@ -140,7 +160,7 @@ export default function IndiaMap({ conflict = [], weather = [], concern = [] }) 
             </Popup>
           </Marker>
         ))}
-        {weather.map((item, index) => (
+        {weatherMarkers.map((item, index) => (
           <Marker key={`weather-${index}`} position={item.position} icon={weatherMarkerIcon}>
             <Popup className="intel-popup">
               <div className="intel-popup-content">
@@ -150,7 +170,7 @@ export default function IndiaMap({ conflict = [], weather = [], concern = [] }) 
             </Popup>
           </Marker>
         ))}
-        {concern.map((item, index) => (
+        {concernMarkers.map((item, index) => (
           <Marker key={`concern-${index}`} position={item.position} icon={redTriangleIcon}>
             <Popup className="intel-popup">
               <div className="intel-popup-content">

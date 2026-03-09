@@ -24,7 +24,37 @@ const worldData = await safeJson('/v1/stability/World');
 const breakingNewsData = await safeJson('/v1/breaking-news');
 const telegramData = await safeJson('/v1/telegram');
 const coordinatesData = await safeJson('/v1/coordinates');
-console.log(coordinatesData);
+
+function normalizeCoordinateItem(item: unknown) {
+	if (Array.isArray(item) && item.length >= 2) {
+		const [latitude, longitude, comment = ''] = item;
+		if (typeof latitude === 'number' && typeof longitude === 'number') {
+			return {
+				position: [latitude, longitude],
+				comment: typeof comment === 'string' ? comment : '',
+			};
+		}
+	}
+
+	if (item && typeof item === 'object') {
+		const latitude = 'latitude' in item ? item.latitude : undefined;
+		const longitude = 'longitude' in item ? item.longitude : undefined;
+		const comment =
+			('comment' in item && typeof item.comment === 'string' && item.comment) ||
+			('desc' in item && typeof item.desc === 'string' && item.desc) ||
+			'';
+
+		if (typeof latitude === 'number' && typeof longitude === 'number') {
+			return {
+				position: [latitude, longitude],
+				comment,
+			};
+		}
+	}
+
+	return null;
+}
+
 let coordinatesDataFormatted = {
 	conflict: [],
 	weather: [],
@@ -33,26 +63,16 @@ let coordinatesDataFormatted = {
 if (coordinatesData && typeof coordinatesData === 'object') {
 	coordinatesDataFormatted = {
 		conflict: Array.isArray(coordinatesData.conflict)
-			? coordinatesData.conflict.map((item) => ({
-					position: [item?.latitude, item?.longitude],
-					comment: item?.comment ?? '',
-				}))
+			? coordinatesData.conflict.map(normalizeCoordinateItem).filter(Boolean)
 			: [],
 		weather: Array.isArray(coordinatesData.weather)
-			? coordinatesData.weather.map((item) => ({
-					position: [item?.latitude, item?.longitude],
-					comment: item?.comment ?? '',
-				}))
+			? coordinatesData.weather.map(normalizeCoordinateItem).filter(Boolean)
 			: [],
 		concern: Array.isArray(coordinatesData.concern)
-			? coordinatesData.concern.map((item) => ({
-					position: [item?.latitude, item?.longitude],
-					comment: item?.comment ?? '',
-				}))
+			? coordinatesData.concern.map(normalizeCoordinateItem).filter(Boolean)
 			: [],
 	};
 }
-console.log(coordinatesDataFormatted);
 ---
 
 <Layout title="INTEL">
