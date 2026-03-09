@@ -31,7 +31,7 @@ export async function getNewsSummary() {
 try {
   await redis.connect();
   const items = await getNewsSummary();
-  await DataGenSarvam(items);
+  await DataGen(items);
 } catch (error) {
   exitCode = 1;
   console.error(error);
