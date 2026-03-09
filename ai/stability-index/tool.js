@@ -72,6 +72,7 @@ export const StabilityAssessmentTool = tool({
     assessment: assessmentSchema,
   }),
   execute: async ({ region, assessment }) => {
+    console.log(`Stability Tool Invoked for ${region}`);
     const redis = await getRedisClient();
     const computed = computeStabilityIndex(assessment);
     const stabilitySummary = {
@@ -81,7 +82,7 @@ export const StabilityAssessmentTool = tool({
       trend: assessment?.meta?.trend ?? null,
       alert_color: assessment?.meta?.alert_color ?? null,
     };
-
+    console.log(stabilitySummary);
     await redis.set(
       `stability_assessment:${region}`,
       JSON.stringify(assessment),
