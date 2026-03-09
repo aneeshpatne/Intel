@@ -21,27 +21,22 @@ function parseJsonList(items) {
 }
 
 app.get("/v1/marquee", async (_req, res) => {
-  const marquee = await redisClient.get("newsMarquee");
-  if (!marquee) {
+  const marquee = await redisClient.lRange("marqueeItems", 0, -1);
+  if (!marquee.length) {
     return res.status(404).json({
       error: "Not Found",
       message: "No marquee data found",
     });
   }
 
-  try {
-    const parsed = JSON.parse(marquee);
-    return res.status(200).json(Array.isArray(parsed) ? parsed : []);
-  } catch {
-    return res.status(200).json([]);
-  }
+  return res.status(200).json(marquee);
 });
 
 app.get("/v1/coordinates", async (_req, res) => {
   const [conflictItems, weatherItems, concernItems] = await Promise.all([
-    redisClient.lRange("coordinate:conflict", 0, -1),
-    redisClient.lRange("coords:weather", 0, -1),
-    redisClient.lRange("coords:concern", 0, -1),
+    redisClient.lRange("coordinates:conflict", 0, -1),
+    redisClient.lRange("coordinates:weather", 0, -1),
+    redisClient.lRange("coordinates:concern", 0, -1),
   ]);
 
   if (!conflictItems.length && !weatherItems.length && !concernItems.length) {
