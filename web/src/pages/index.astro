@@ -75,18 +75,28 @@ if (coordinatesData && typeof coordinatesData === 'object') {
 }
 ---
 
-<Layout title="INTEL">
-	<main class="relative min-h-screen bg-[#07090d] px-4 pt-4 pb-8 sm:px-6 sm:pt-6">
-		<div class="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2">
-			<div class="h-[16rem] w-[48rem] bg-zinc-500/10 blur-[120px]"></div>
+<Layout title="WORLD INTELLIGENCE | INTEL">
+	<main class="relative min-h-screen bg-[#000000] px-4 pt-0 pb-24 sm:px-6 md:pt-0 font-sans selection:bg-white/20">
+		<!-- Dynamic ambient background - Premium Tier -->
+		<div class="pointer-events-none fixed inset-0 overflow-hidden z-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+		<div class="pointer-events-none fixed inset-0 overflow-hidden z-0">
+			<!-- Main top glow -->
+			<div class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 h-[40rem] w-[80rem] rounded-full bg-white/[0.03] blur-[120px]"></div>
+			<!-- Subtle corner glows -->
+			<div class="absolute -left-[10%] top-1/4 h-[30rem] w-[30rem] rounded-full bg-white/[0.02] blur-[120px]"></div>
+			<div class="absolute top-[60%] right-[-5%] h-[40rem] w-[40rem] rounded-full bg-white/[0.02] blur-[120px]"></div>
 		</div>
 
-		<div class="relative mx-auto w-full max-w-[82rem] p-4 sm:p-6">
-			<h1 class="text-center text-6xl font-extrabold tracking-[0.15em] text-zinc-100 sm:text-8xl">
-				INTEL
-			</h1>
+		<div class="relative z-10 mx-auto w-full max-w-[90rem] p-4 sm:p-6 lg:px-8 flex flex-col gap-6 sm:gap-8">
+			<!-- Header -->
+			<header class="flex flex-col items-center justify-center mb-0 mt-0">
+				<h1 class="intel-title-font text-center text-8xl font-normal tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-500 sm:text-[160px] drop-shadow-2xl select-none leading-none -mt-4">
+					INTEL
+				</h1>
+			</header>
 
-			<div class="mx-auto mt-5 w-full max-w-[80rem]">
+			<!-- Marquee -->
+			<div class="mx-auto w-full max-w-[80rem] -mt-6">
 				<NewsMarquee newsItems={marqueeData} client:only="react" />
 			</div>
 			<IndiaMap
@@ -96,13 +106,17 @@ if (coordinatesData && typeof coordinatesData === 'object') {
 				client:only="react"
 			/>
 
-			<section class="mx-auto mt-8 grid w-full max-w-[80rem] gap-6 md:grid-cols-2 xl:gap-8">
+			<!-- Stability Boards -->
+			<section class="mx-auto grid w-full max-w-[80rem] gap-6 lg:grid-cols-2 xl:gap-10">
 				<StabilityPanels label="India" panelData={indiaData} client:only="react" />
 				<StabilityPanels label="World" panelData={worldData} client:only="react" />
 			</section>
 
-			<BreakingNewsFeed newsData={breakingNewsData} client:only="react" />
-			<TelegramOsint telegramData={telegramData} />
+			<!-- Content Feed -->
+			<div class="mx-auto flex flex-col w-full max-w-[80rem] gap-8">
+				<BreakingNewsFeed newsData={breakingNewsData} client:only="react" />
+				<TelegramOsint telegramData={telegramData} />
+			</div>
 		</div>
 	</main>
 </Layout>
