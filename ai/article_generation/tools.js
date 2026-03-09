@@ -26,6 +26,7 @@ export const ArticleTool = tool({
     ),
   }),
   execute: async ({ articles }) => {
+    console.log("Additional News Tool Invoked: ", articles);
     const redis = await getRedisClient();
     await redis.set("selectedArticles", JSON.stringify(articles));
     console.log(articles);
