@@ -5,6 +5,7 @@ import path from "node:path";
 import { MarqueeItems } from "./tool_data.js";
 import { CoordinateTool } from "./tool_coordinate.js";
 import { StabilityAssessmentTool } from "../stability-index/tool.js";
+import { ArticleTool } from "../article_generation/tools.js";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
@@ -27,11 +28,12 @@ The digest format is a repeated sequence like:
 Title: ...
 Description: ...
 
-Your job is to extract four kinds of output:
+Your job is to extract five kinds of output:
 1. Short marquee headlines for the site's scrolling news strip.
 2. Geolocated event markers for the map.
 3. A stored stability assessment for the World region.
 4. A stored stability assessment for the India region.
+5. A short list of high-priority stories that deserve standalone articles.
 
 Input digest:
 ${items || "No items provided."}
@@ -41,16 +43,17 @@ Workflow:
 2. Identify the strongest, most relevant developments.
 3. Call MarqueeItems exactly once with an array named marquee.
 4. Call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
-5. Call StabilityAssessmentTool once with:
+5. Call ArticleTool exactly once with an array named articles.
+6. Call StabilityAssessmentTool once with:
    - region: "World"
-6. Call StabilityAssessmentTool a second time with:
+7. Call StabilityAssessmentTool a second time with:
    - region: "India"
 7. After all tool calls, return a short plain-text summary of what was saved.
 
 Hard requirement:
-- This task is incomplete unless MarqueeItems is called once, CoordinateTool is called once, and StabilityAssessmentTool is called twice.
+- This task is incomplete unless MarqueeItems is called once, CoordinateTool is called once, ArticleTool is called once, and StabilityAssessmentTool is called twice.
 - If there is weak signal, still call all tools and use conservative, moderate scores.
-- Do not end your response until MarqueeItems, CoordinateTool, and both StabilityAssessmentTool calls have completed.
+- Do not end your response until MarqueeItems, CoordinateTool, ArticleTool, and both StabilityAssessmentTool calls have completed.
 
 Rules for MarqueeItems:
 - Save 4 to 12 items when enough signal exists.
@@ -68,6 +71,23 @@ Rules for CoordinateTool:
 - desc must be factual, specific, and <= 50 characters.
 - Do not invent coordinates for vague locations.
 - If a category has no reliable points, pass an empty array for it.
+
+Rules for ArticleTool:
+- Select 0 to 3 distinct, high-priority stories that deserve full standalone articles.
+- Call ArticleTool exactly once with:
+  {
+    articles: [
+      {
+        title,
+        initialData
+      }
+    ]
+  }
+- title must be concise, factual, and headline-style.
+- initialData must be a compact synthesis from the digest only: what happened, where, who is involved, and why it matters now.
+- Prefer stories with clear impact, urgency, or broad significance.
+- Do not include duplicates, near-duplicates, or low-signal background items.
+- If the digest is weak, still call the tool with an empty articles array.
 
 Rules for StabilityAssessmentTool:
 - Call StabilityAssessmentTool exactly twice in this run: first for World, second for India.
@@ -121,7 +141,12 @@ General constraints:
 - Do not fabricate facts, places, dates, or coordinates.
 - Keep outputs compact and high-signal.
 - Avoid commentary outside the requested tool calls and final short summary.`,
-    tools: { MarqueeItems, CoordinateTool, StabilityAssessmentTool },
+    tools: {
+      MarqueeItems,
+      CoordinateTool,
+      StabilityAssessmentTool,
+      ArticleTool,
+    },
   });
 
   return text;
