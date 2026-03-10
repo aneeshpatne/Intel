@@ -13,17 +13,18 @@ for await (const batch of redis.scanIterator({ MATCH: "coordinates:*" })) {
   keys.push(...batch);
 }
 
-
 let result = await Promise.all(
-    keys.map(async(key) => {
-        return await redis.lRange(key, 0, -1);
-    })
-)
+  keys.map(async (key) => {
+    return await redis.lRange(key, 0, -1);
+  }),
+);
 
 console.log(
   result
     .flat()
-    .map(i => JSON.parse(i)[2])
-    .join("\n")
+    .map((i) => JSON.parse(i)[2])
+    .join("\n"),
 );
+
+const selectedArticle = await redis.lRange("selectedArticles:list", 0, -1);
 await redis.quit();

@@ -17,7 +17,12 @@ if (!apiKey) {
 
 const google = createGoogleGenerativeAI({ apiKey });
 
-export default async function DataGen(items, marqueeData, CoordinatesData) {
+export default async function DataGen(
+  items,
+  marqueeData,
+  CoordinatesData,
+  selectedArticles = "",
+) {
   const { text } = await generateText({
     model: google("gemini-3.1-flash-lite-preview"),
     stopWhen: stepCountIs(8),
@@ -44,9 +49,12 @@ ${marqueeData || "No existing marquee items."}
 Existing coordinate descriptions already saved:
 ${CoordinatesData || "No existing coordinate items."}
 
+Existing selected article titles already saved:
+${selectedArticles || "No existing selected articles."}
+
 Workflow:
 1. Read the full digest first and treat each Title/Description pair as one news item.
-2. Read the existing saved marquee items and coordinate descriptions before selecting outputs.
+2. Read the existing saved marquee items, coordinate descriptions, and selected article titles before selecting outputs.
 3. Identify the strongest, most relevant developments that are new relative to what is already saved.
 4. Call MarqueeItems exactly once with an array named marquee.
 5. Call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
@@ -97,6 +105,7 @@ Rules for ArticleTool:
 - title must be concise, factual, and headline-style.
 - initialData must be a compact synthesis from the digest only: what happened, where, who is involved, and why it matters now.
 - Prefer stories with clear impact, urgency, or broad significance.
+- Compare against the existing selected article titles above and do not send duplicates or near-duplicates.
 - Do not include duplicates, near-duplicates, or low-signal background items.
 - If the digest is weak, still call the tool with an empty articles array.
 
