@@ -1,249 +1,115 @@
 # World Intelligence
 
-World Intelligence is a Redis-backed intelligence dashboard made of three parts:
+`World Intelligence` is an AI-assisted intel dashboard that turns noisy open-source inputs into a fast, visual operating picture.
 
-- `ai/` collects and transforms intel data with Gemini-powered pipelines
-- `server/` exposes the stored data through a small Express API
-- `web/` renders the dashboard with Astro, React, Tailwind, and Leaflet
+It pulls from multiple upstream feeds, writes structured outputs into Redis, serves them through a small Express API, and renders the result as an Astro dashboard with maps, stability panels, breaking-news cards, and Telegram OSINT summaries.
 
-The current product surface is an `INTEL` dashboard with:
+## What It Does
 
-- scrolling marquee headlines
-- geospatial event markers
-- India and World stability panels
-- AI-written breaking-news cards
-- Telegram OSINT summaries
+- Ingests upstream news and channel data
+- Extracts marquee headlines, map markers, and stability assessments
+- Selects high-priority stories for deeper article generation
+- Stores everything in Redis as the shared runtime state
+- Exposes the data through a simple API
+- Renders the final intel UI in the browser
 
-## Current Architecture
+## Source Stack
+
+The system is built around a mix of upstream feeds and search-backed enrichment:
+
+- Telegram channels for OSINT-style channel monitoring
+- X (formerly Twitter) as a source via X search through the Grok API in [`ai/x_search/x.js`](/home/aneesh/code/world-intelligence/ai/x_search/x.js)
+- RSS news feeds from the NewsRoom API pipeline
+- Google Search API results from the NewsRoom API pipeline
+- Publisher page scraping during deep-search article generation
+
+The repo currently consumes `newsCollection` from the separate NewsRoom pipeline, which is where the RSS and Google Search API aggregation comes from.
+
+- NewsRoom repo: `https://github.com/aneeshpatne/news_room.git`
+
+## Repo Layout
 
 ```text
-Telegram channels ----> ai/telegram/* ---------------------> Redis
-newsCollection -------> ai/stat_data/* --------------------> Redis
-selectedArticles -----> ai/deep_search/* + external search -> Redis
-Redis ----------------> server/server.js ------------------> HTTP API
-HTTP API -------------> web/src/pages/index.astro ---------> Dashboard UI
+.
+├── ai/        AI and ingestion pipelines
+├── server/    Express API over Redis data
+└── web/       Astro dashboard frontend
 ```
+
+## Architecture
 
 ```mermaid
 flowchart TD
   subgraph Sources
-    TG["Telegram Channels"]
-    NR["NewsRoom API<br/>newsCollection"]
-    DS["Deep Search Service<br/>DEEP_SEARCH_URL"]
-    PUB["Publisher Pages"]
+    TG["Telegram channels"]
+    X["X search via Grok API"]
+    NR["NewsRoom API<br/>RSS + Google Search API"]
+    PUB["Publisher pages"]
   end
 
-  subgraph AI["AI Pipelines"]
-    TCH["ai/telegram/channel.js<br/>fetch + dedup"]
-    TPIPE["ai/telegram/pipeline.js<br/>Gemini summarization"]
-    SD["ai/stat_data/pipeline.js<br/>dashboard data extraction"]
-    DSR["ai/deep_search/pipeline.js<br/>article generation"]
-    ORCH["ai/orchestrator.js<br/>BullMQ cron"]
+  subgraph Pipelines
+    T1["ai/telegram/channel.js"]
+    T2["ai/telegram/pipeline.js"]
+    S1["ai/stat_data/pipeline.js"]
+    D1["ai/deep_search/pipeline.js"]
+    X1["ai/x_search/x.js"]
+    O1["ai/orchestrator.js"]
   end
 
-  subgraph Data
-    R[("Redis")]
-  end
+  R[("Redis")]
+  API["server/server.js"]
+  WEB["web/ dashboard"]
 
-  subgraph Serving
-    API["server/server.js<br/>Express API"]
-    WEB["web/<br/>Astro + React dashboard"]
-  end
-
-  TG --> TCH --> TPIPE --> R
-  ORCH --> TPIPE
-  NR --> SD --> R
-  R --> DSR
-  DSR --> DS --> PUB --> DSR --> R
+  TG --> T1 --> T2 --> R
+  NR --> S1 --> R
+  R --> D1 --> PUB --> R
+  X --> X1
+  O1 --> T2
   R --> API --> WEB
 ```
 
-## Data Flows
+## Runtime Flow
 
-```mermaid
-flowchart LR
-  subgraph Telegram
-    T1["Telegram Channels"] --> T2["telegram:dedup:latest20"]
-    T1 --> T3["telegram:new:latest20"]
-    T3 --> T4["TelegramSummary"]
-    T2 --> T4
-    T4 --> T5["Telegram-Info"]
-    T4 --> T6["Telegram-Desc"]
-  end
+### 1. Telegram pipeline
 
-  subgraph Dashboard
-    N1["NewsRoom API"] --> N2["newsCollection"]
-    N2 --> N3["stat_data/ai.js"]
-    N3 --> N4["marqueeItems"]
-    N3 --> N5["coordinates:*"]
-    N3 --> N6["selectedArticles"]
-    N3 --> N7["stability_summary:India"]
-    N3 --> N8["stability_summary:World"]
-  end
+- [`ai/telegram/channel.js`](/home/aneesh/code/world-intelligence/ai/telegram/channel.js) fetches and deduplicates recent Telegram messages
+- [`ai/telegram/pipeline.js`](/home/aneesh/code/world-intelligence/ai/telegram/pipeline.js) summarizes them
+- Results land in Redis keys such as `telegram:dedup:latest20`, `telegram:new:latest20`, and `Telegram-Info`
 
-  subgraph Articles
-    A1["selectedArticles"] --> A2["deep_search/pipeline.js"]
-    A2 --> A3["DEEP_SEARCH_URL"]
-    A3 --> A4["scrape publisher pages"]
-    A4 --> A5["savedArticles"]
-  end
-```
+### 2. Dashboard data pipeline
 
-## What Lives Where
+- [`ai/stat_data/pipeline.js`](/home/aneesh/code/world-intelligence/ai/stat_data/pipeline.js) reads `newsCollection`
+- [`ai/stat_data/ai.js`](/home/aneesh/code/world-intelligence/ai/stat_data/ai.js) extracts:
+  - marquee headlines
+  - coordinate markers
+  - India stability summary
+  - World stability summary
+  - selected article candidates
 
-```text
-.
-├── ai/
-│   ├── orchestrator.js
-│   ├── telegram/
-│   ├── stat_data/
-│   ├── stability-index/
-│   ├── deep_search/
-│   ├── article_generation/
-│   └── x_search/
-├── server/
-│   └── server.js
-└── web/
-    └── src/
-```
+### 3. Article generation pipeline
 
-## Runtime Responsibilities
+- [`ai/deep_search/pipeline.js`](/home/aneesh/code/world-intelligence/ai/deep_search/pipeline.js) reads `selectedArticles`
+- [`ai/deep_search/tools.js`](/home/aneesh/code/world-intelligence/ai/deep_search/tools.js) calls the configured search service via `DEEP_SEARCH_URL`
+- Matching publisher pages are scraped and saved as `savedArticles`
 
-### `ai/`
+### 4. API + frontend
 
-This folder contains the data-generation side of the system.
+- [`server/server.js`](/home/aneesh/code/world-intelligence/server/server.js) reads Redis and exposes JSON endpoints
+- [`web/src/pages/index.astro`](/home/aneesh/code/world-intelligence/web/src/pages/index.astro) fetches those endpoints and renders the dashboard
 
-- `ai/telegram/channel.js`
-  Fetches the latest Telegram messages from configured channels, deduplicates them, and stores both full recent history and newly seen items in Redis.
-- `ai/telegram/pipeline.js`
-  Runs the Telegram sync, builds a plain-text digest from the latest messages, and sends that digest to Gemini for structured news extraction.
-- `ai/telegram/tools.js`
-  Saves Telegram summaries into `Telegram-Info` and `Telegram-Desc`.
-- `ai/orchestrator.js`
-  Schedules the Telegram pipeline with BullMQ on a cron in `Asia/Kolkata`.
-- `ai/stat_data/pipeline.js`
-  Reads `newsCollection` from Redis and sends it to Gemini for dashboard data generation.
-- `ai/stat_data/ai.js`
-  Produces marquee items, coordinate markers, article candidates, and stability assessments.
-- `ai/deep_search/pipeline.js`
-  Reads `selectedArticles`, performs web search and scraping, and saves finished article cards.
-- `ai/stability-index/compute_layer.js`
-  Converts structured risk/stabilizer assessments into a numeric stability score.
+## Product Surface
 
-### `server/`
+The current UI includes:
 
-`server/server.js` connects to Redis and serves the data the dashboard needs.
-
-Important detail:
-- the server loads environment variables from `ai/.env`
-- default API port is `8006`
-
-### `web/`
-
-The dashboard lives in `web/` and is rendered by Astro with React islands.
-
-Main UI sections:
-
-- `NewsMarquee`
-- `IndiaMap`
-- `StabilityPanels`
-- `BreakingNewsFeed`
-- `TelegramOsint`
-
-The page fetches data from `PUBLIC_API_BASE_URL`, falling back to `http://192.168.0.99:8006`.
-
-## Redis Data Contract
-
-The current code reads and writes these keys:
-
-### Produced by Telegram pipeline
-
-- `telegram:dedup:latest20`
-  Latest deduplicated Telegram messages by channel.
-- `telegram:new:latest20`
-  Newly seen Telegram messages by channel.
-- `Telegram-Info`
-  Array of structured Telegram summary cards.
-- `Telegram-Desc`
-  Description-only subset of the Telegram summaries.
-
-### Produced by `ai/stat_data`
-
-- `marqueeItems`
-  List of short marquee headlines.
-- `coordinates:conflict`
-  Redis list of JSON arrays shaped like `[lat, lng, desc]`.
-- `coordinates:weather`
-  Same format for weather/climate events.
-- `coordinates:concern`
-  Same format for concern/risk markers.
-- `selectedArticles`
-  JSON array of article candidates for deep-search expansion.
-- `stability_assessment:World`
-- `stability_assessment:India`
-- `stability_summary:World`
-- `stability_summary:India`
-- `stability_score:World`
-- `stability_score:India`
-
-### Consumed from upstream
-
-- [![NewsRoom API](https://img.shields.io/badge/NewsRoom_API-GitHub-181717?logo=github)](https://github.com/aneeshpatne/news_room.git)
-
-- `newsCollection`
-  This repo reads this key, and it is populated by the NewsRoom API:
-  https://github.com/aneeshpatne/news_room.git
-
-### Produced by deep search
-
-- `savedArticles`
-  Redis list of article objects with article body, source URLs, and optional OG image.
-
-```mermaid
-flowchart LR
-  subgraph Producers
-    P1["Telegram tools"]
-    P2["stat_data tools"]
-    P3["deep_search tools"]
-  end
-
-  subgraph Keys
-    K1["Telegram-Info"]
-    K2["Telegram-Desc"]
-    K3["marqueeItems"]
-    K4["coordinates:conflict"]
-    K5["coordinates:weather"]
-    K6["coordinates:concern"]
-    K7["selectedArticles"]
-    K8["savedArticles"]
-    K9["stability_summary:India"]
-    K10["stability_summary:World"]
-  end
-
-  subgraph API
-    A1["GET /v1/telegram"]
-    A2["GET /v1/marquee"]
-    A3["GET /v1/coordinates"]
-    A4["GET /v1/breaking-news"]
-    A5["GET /v1/stability/India"]
-    A6["GET /v1/stability/World"]
-  end
-
-  P1 --> K1 --> A1
-  P1 --> K2
-  P2 --> K3 --> A2
-  P2 --> K4 --> A3
-  P2 --> K5 --> A3
-  P2 --> K6 --> A3
-  P2 --> K7
-  P2 --> K9 --> A5
-  P2 --> K10 --> A6
-  P3 --> K8 --> A4
-```
+- scrolling marquee headlines
+- geospatial event markers
+- India and World stability panels
+- AI-generated breaking-news article cards
+- Telegram OSINT summaries
 
 ## API
 
-The Express server currently exposes:
+Current server endpoints:
 
 - `GET /v1/marquee`
 - `GET /v1/coordinates`
@@ -251,142 +117,103 @@ The Express server currently exposes:
 - `GET /v1/breaking-news`
 - `GET /v1/stability/:region`
 
-Expected regions for the stability route are currently `India` and `World`.
+Supported stability regions in the current UI are `India` and `World`.
 
-## Environment Variables
+## Redis Keys
 
-Most runtime configuration is expected in `ai/.env`.
+Primary keys used by this repo:
+
+- `newsCollection` from the upstream NewsRoom pipeline
+- `marqueeItems`
+- `coordinates:conflict`
+- `coordinates:weather`
+- `coordinates:concern`
+- `selectedArticles`
+- `selectedArticles:list`
+- `savedArticles`
+- `Telegram-Info`
+- `Telegram-Desc`
+- `telegram:dedup:latest20`
+- `telegram:new:latest20`
+- `stability_summary:India`
+- `stability_summary:World`
+- `stability_assessment:India`
+- `stability_assessment:World`
+- `stability_score:India`
+- `stability_score:World`
+
+## Environment
+
+Most runtime configuration is loaded from `ai/.env`.
 
 ### Core
 
 - `REDIS_URL`
-- `PORT` for the API server, optional
-- `PUBLIC_API_BASE_URL` for the web app, optional
+- `PORT`
+- `PUBLIC_API_BASE_URL`
 
-### Gemini / AI
+### AI
 
 - `GEMINI_API_KEY`
+- `OPENROUTER_API_KEY`
 
 ### Telegram
 
 - `TG_API_ID`
 - `TG_API_HASH`
 - `TG_SESSION_STRING`
-- `TG_CHANNEL_LINKS` optional comma-separated override
-- `TG_QUEUE_NAME` optional BullMQ queue name
-- `TG_REDIS_KEY` optional override, default `telegram:dedup:latest20`
-- `TG_REDIS_NEW_KEY` optional override, default `telegram:new:latest20`
-- `TG_SUPPRESS_TIMEOUT_LOGS` optional
+- `TG_CHANNEL_LINKS`
+- `TG_QUEUE_NAME`
+- `TG_REDIS_KEY`
+- `TG_REDIS_NEW_KEY`
+- `TG_SUPPRESS_TIMEOUT_LOGS`
 
-Default Telegram channels in code:
+Default Telegram channels live in [`ai/telegram/default-channels.js`](/home/aneesh/code/world-intelligence/ai/telegram/default-channels.js).
 
-- `WNGNEW`
-- `GoreUnit99`
-- `elitepredatorss`
-- `OsintTv`
-- `OSINTdefender`
-
-### Deep Search
+### Deep search
 
 - `DEEP_SEARCH_URL`
-- `SAVED_ARTICLES_KEY` optional override for `savedArticles`
+- `SAVED_ARTICLES_KEY`
 
-## Install
+## Local Setup
 
-Install dependencies per package:
-
-```bash
-cd ai
-npm install
-```
+Install dependencies in each package:
 
 ```bash
-cd server
-npm install
+cd ai && npm install
+cd server && npm install
+cd web && npm install
 ```
 
-```bash
-cd web
-npm install
-```
+Start Redis first, or point `REDIS_URL` at a reachable instance.
 
-## Run Locally
-
-### 1. Start Redis
-
-Use your local Redis instance or set `REDIS_URL` to a reachable server.
-
-### 2. Start the API
+Run the API:
 
 ```bash
 cd server
 node server.js
 ```
 
-### 3. Start the dashboard
+Run the dashboard:
 
 ```bash
 cd web
 npm run dev
 ```
 
-### 4. Run data pipelines as needed
-
-Telegram pipeline once:
+Run pipelines as needed:
 
 ```bash
 cd ai
 node telegram/pipeline.js
-```
-
-Telegram scheduler:
-
-```bash
-cd ai
 node orchestrator.js
-```
-
-Dashboard data generation from `newsCollection`:
-
-```bash
-cd ai
 node stat_data/pipeline.js
-```
-
-Deep-search article generation from `selectedArticles`:
-
-```bash
-cd ai
 node deep_search/pipeline.js
+node x_search/x.js
 ```
 
-## Typical Data Flow
+## Notes
 
-### Telegram path
-
-1. `ai/telegram/channel.js` fetches Telegram messages.
-2. Redis stores deduplicated and newly seen messages.
-3. `ai/telegram/pipeline.js` summarizes them with Gemini.
-4. The server exposes the summaries through `/v1/telegram`.
-5. The dashboard renders them in the Telegram OSINT panel.
-
-### Dashboard data path
-
-1. Some upstream process writes `newsCollection`.
-2. `ai/stat_data/pipeline.js` reads that digest.
-3. Gemini generates:
-   - marquee items
-   - map coordinates
-   - article candidates
-   - India stability summary
-   - World stability summary
-4. The server exposes those keys through the API.
-5. The dashboard renders the marquee, map, and stability panels.
-
-### Article path
-
-1. `selectedArticles` is written by `ai/stat_data`.
-2. `ai/deep_search/pipeline.js` reads each candidate.
-3. The deep-search pipeline calls an external search service, scrapes resulting pages, and writes article cards into `savedArticles`.
-4. The server exposes them through `/v1/breaking-news`.
-5. The dashboard renders them in Breaking News.
+- The frontend defaults `PUBLIC_API_BASE_URL` to `http://192.168.0.99:8006` when unset in [`web/src/pages/index.astro`](/home/aneesh/code/world-intelligence/web/src/pages/index.astro#L8)
+- The API server loads environment variables from `ai/.env` in [`server/server.js`](/home/aneesh/code/world-intelligence/server/server.js#L7)
+- There is no top-level package manager entrypoint right now; `ai/`, `server/`, and `web/` are run separately
