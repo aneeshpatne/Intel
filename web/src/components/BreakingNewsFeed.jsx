@@ -84,7 +84,7 @@ export default function BreakingNewsFeed({ newsData }) {
               key={`${index}-${title.slice(0, 32)}`}
               className="group relative overflow-hidden rounded-3xl bg-black/40 border border-white/[0.05] p-6 sm:p-8 transition-all duration-500 hover:bg-white/[0.02] hover:border-white/[0.1] shadow-lg backdrop-blur-xl flex flex-col gap-6"
             >
-              <div className="absolute top-0 left-0 w-1 h-full bg-white/20 opacity-30 group-hover:opacity-100 transition-opacity duration-500"></div>
+
 
               <h3 className="text-3xl sm:text-4xl font-normal leading-tight text-zinc-100 tracking-wide intel-title-font">
                 {title}

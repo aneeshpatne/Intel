@@ -31,7 +31,7 @@ const items = Array.isArray(telegramData) ? telegramData : [];
       {
         items.map((item) => (
           <article class="group/item relative border border-white/[0.05] bg-black/40 p-5 rounded-2xl transition-all duration-300 hover:bg-white/[0.03] hover:border-white/[0.1] hover:shadow-lg">
-            <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-zinc-500/0 transition-colors duration-300 group-hover/item:bg-zinc-300/70 rounded-l-2xl"></div>
+
             <p class="text-base font-medium text-zinc-100 group-hover/item:text-white transition-colors tracking-wide">{item?.title ?? 'Untitled Signal'}</p>
             <p class="mt-2 text-sm leading-relaxed text-zinc-400 font-light group-hover/item:text-zinc-300 transition-colors">{item?.desc ?? 'No descriptor data attached.'}</p>
           </article>
