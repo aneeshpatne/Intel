@@ -29,6 +29,8 @@ export const ArticleTool = tool({
     console.log("Additional News Tool Invoked: ", articles);
     const redis = await getRedisClient();
     await redis.set("selectedArticles", JSON.stringify(articles));
+    const titles = articles.map((item) => item.title);
+    await redis.rPush("selectedArticles:list", titles);
     console.log(articles);
     return { articles };
   },
