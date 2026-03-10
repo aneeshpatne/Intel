@@ -17,7 +17,7 @@ if (!apiKey) {
 
 const google = createGoogleGenerativeAI({ apiKey });
 
-export default async function DataGen(items) {
+export default async function DataGen(items, marqueeData, CoordinatesData) {
   const { text } = await generateText({
     model: google("gemini-3.1-flash-lite-preview"),
     stopWhen: stepCountIs(8),
@@ -38,17 +38,24 @@ Your job is to extract five kinds of output:
 Input digest:
 ${items || "No items provided."}
 
+Existing marquee items already saved:
+${marqueeData || "No existing marquee items."}
+
+Existing coordinate descriptions already saved:
+${CoordinatesData || "No existing coordinate items."}
+
 Workflow:
 1. Read the full digest first and treat each Title/Description pair as one news item.
-2. Identify the strongest, most relevant developments.
-3. Call MarqueeItems exactly once with an array named marquee.
-4. Call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
-5. Call ArticleTool exactly once with an array named articles.
-6. Call StabilityAssessmentTool once with:
+2. Read the existing saved marquee items and coordinate descriptions before selecting outputs.
+3. Identify the strongest, most relevant developments that are new relative to what is already saved.
+4. Call MarqueeItems exactly once with an array named marquee.
+5. Call CoordinateTool exactly once with 3 arrays: conflict, concern, weather.
+6. Call ArticleTool exactly once with an array named articles.
+7. Call StabilityAssessmentTool once with:
    - region: "World"
-7. Call StabilityAssessmentTool a second time with:
+8. Call StabilityAssessmentTool a second time with:
    - region: "India"
-7. After all tool calls, return a short plain-text summary of what was saved.
+9. After all tool calls, return a short plain-text summary of what was saved.
 
 Hard requirement:
 - This task is incomplete unless MarqueeItems is called once, CoordinateTool is called once, ArticleTool is called once, and StabilityAssessmentTool is called twice.
@@ -60,6 +67,8 @@ Rules for MarqueeItems:
 - Each marquee string must be short, sharp, and under 60 characters.
 - Use headline style, not full sentences.
 - Do not include duplicates or near-duplicates.
+- Compare against the existing marquee items above and only send genuinely new items.
+- If an item is already covered by an existing marquee line, do not send it again.
 - Prefer current, high-signal developments over low-value background.
 
 Rules for CoordinateTool:
@@ -70,6 +79,8 @@ Rules for CoordinateTool:
 - Each point must include latitude, longitude, and desc.
 - desc must be factual, specific, and <= 50 characters.
 - Do not invent coordinates for vague locations.
+- Compare against the existing coordinate descriptions above and only add genuinely new points.
+- If an event/location is already represented in the existing coordinate descriptions, do not send it again.
 - If a category has no reliable points, pass an empty array for it.
 
 Rules for ArticleTool:
@@ -140,6 +151,8 @@ General constraints:
 - Use only the provided digest content.
 - Do not fabricate facts, places, dates, or coordinates.
 - Keep outputs compact and high-signal.
+- Treat existing marquee items and existing coordinate descriptions as already stored state.
+- This run is append-only for marquee and coordinate outputs: only add new items not already represented in existing data.
 - Avoid commentary outside the requested tool calls and final short summary.`,
     tools: {
       MarqueeItems,
