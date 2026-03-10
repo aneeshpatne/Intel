@@ -27,7 +27,6 @@ export const MarqueeItems = tool({
       return "No items to save";
     }
 
-    await redis.del("marqueeItems");
     await redis.rPush("marqueeItems", marquee);
     return "Saved";
   },

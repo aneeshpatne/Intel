@@ -62,7 +62,7 @@ export const CoordinateTool = tool({
     };
 
     for (const [key, value] of Object.entries(payloads)) {
-      await redis.del(key);
+
       if (value.length > 0) {
         const entries = value.map((entry) => JSON.stringify(entry));
         await redis.rPush(key, entries);
