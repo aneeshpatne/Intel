@@ -14,6 +14,7 @@ const connection = { url: redisUrl };
 
 const queue = new Queue(queueName, { connection });
 const queueEvents = new QueueEvents(queueName, { connection });
+const immediateJobName = "telegram-pipeline-asap";
 
 async function resetQueue() {
   console.log(`[orchestrator] resetting queue '${queueName}'`);
@@ -76,7 +77,18 @@ await queue.upsertJobScheduler(
   },
 );
 
+await queue.add(
+  immediateJobName,
+  {},
+  {
+    jobId: `${immediateJobName}-${Date.now()}`,
+    removeOnComplete: 25,
+    removeOnFail: 50,
+  },
+);
+
 console.log(`[orchestrator] scheduled telegram pipeline with cron '${cronPattern}' (${cronTimezone})`);
+console.log("[orchestrator] queued ASAP telegram pipeline job");
 console.log(`[orchestrator] queue='${queueName}' redis='${redisUrl}'`);
 
 async function shutdown(signal) {
