@@ -153,7 +153,7 @@ export default function StabilityPanels({ label, panelData }) {
   const riskText =
     riskItems.length > 0
       ? riskItems[step % riskItems.length]
-      : "No risk factor data";
+        : "No risk factor data";
   const stabilizerText =
     stabilizerItems.length > 0
       ? stabilizerItems[step % stabilizerItems.length]

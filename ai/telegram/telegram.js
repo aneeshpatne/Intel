@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { SaveTool } from "./tools.js";
+import { createOllama } from "ollama-ai-provider-v2";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.resolve(currentDir, "../.env"));
@@ -13,7 +14,7 @@ if (!apiKey) {
 }
 
 const openai = createGoogleGenerativeAI({ apiKey });
-
+const ollama = createOllama();
 export async function TelegramSummary(inputText) {
   const cleanInput = (inputText || "").trim();
   if (!cleanInput) {
@@ -21,7 +22,7 @@ export async function TelegramSummary(inputText) {
   }
 
   await generateText({
-    model: openai("gemini-3.1-flash-lite-preview"),
+    model: ollama("kimi-k2.5:cloud"),
     tools: { SaveTool },
     stopWhen: stepCountIs(3),
     prompt: `You are a world news editor. Extract clear, non-duplicate news items from raw Telegram messages.
