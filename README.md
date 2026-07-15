@@ -1,219 +1,309 @@
-# World Intelligence
+<div align="center">
 
-`World Intelligence` is an AI-assisted intel dashboard that turns noisy open-source inputs into a fast, visual operating picture.
 
-It pulls from multiple upstream feeds, writes structured outputs into Redis, serves them through a small Express API, and renders the result as an Astro dashboard with maps, stability panels, breaking-news cards, and Telegram OSINT summaries.
+  <h1>Intel</h1>
 
-## What It Does
+<strong>Turn fragmented open-source reporting into one focused operating picture.</strong>
 
-- Ingests upstream news and channel data
-- Extracts marquee headlines, map markers, and stability assessments
-- Selects high-priority stories for deeper article generation
-- Stores everything in Redis as the shared runtime state
-- Exposes the data through a simple API
-- Renders the final intel UI in the browser
+  <p>Intel transforms aggregated news and Telegram channel activity into mapped events, regional stability assessments, concise signals, and source-backed reports.</p>
 
-## Source Stack
+  <p>
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"><img src="https://img.shields.io/badge/JavaScript-ES_modules-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript ES modules" /></a>
+    <a href="https://astro.build/"><img src="https://img.shields.io/badge/Astro-5.17-BC52EE?logo=astro&logoColor=fff" alt="Astro 5.17" /></a>
+    <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express-5.2-000?logo=express&logoColor=fff" alt="Express 5.2" /></a>
+    <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-20.12%2B-5FA04E?logo=nodedotjs&logoColor=fff" alt="Node.js 20.12 or newer" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-663399" alt="AGPL-3.0 license" /></a>
+  </p>
+</div>
 
-The system is built around a mix of upstream feeds and search-backed enrichment:
+---
 
-- Telegram channels for OSINT-style channel monitoring
-- X (formerly Twitter) as a source via X search through the Grok API in [`ai/x_search/x.js`](/home/aneesh/code/world-intelligence/ai/x_search/x.js)
-- RSS news feeds from the NewsRoom API pipeline
-- Google Search API results from the NewsRoom API pipeline
-- Publisher page scraping during deep-search article generation
+## Overview
 
-The repo currently consumes `newsCollection` from the separate NewsRoom pipeline, which is where the RSS and Google Search API aggregation comes from.
+Intel accepts a news digest already stored in Redis by an upstream aggregator and recent messages collected from configured Telegram channels. Its pipelines deduplicate and summarize the material, extract display headlines and geospatial events, calculate India and World stability views, and expand selected topics into reports. The result is a compact dashboard for scanning what happened, where it happened, and which developments deserve closer attention.
 
-- NewsRoom repo: `https://github.com/aneeshpatne/news_room.git`
+The interface is an Astro page composed from React islands, styled with Tailwind CSS and a dark, glass-panel visual system. Express exposes the Redis state as five JSON endpoints; Leaflet renders the event map; the Vercel AI SDK coordinates Gemini and Ollama tool calls; and BullMQ schedules the Telegram pipeline with single-job concurrency. Data contracts are enforced at AI tool boundaries with Zod, while the stability score itself is calculated by deterministic weighted JavaScript rather than by the model.
 
-## Repo Layout
+## Features
 
-```text
-.
-├── ai/        AI and ingestion pipelines
-├── server/    Express API over Redis data
-└── web/       Astro dashboard frontend
+| Area                        | What the project provides                                                                                                                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Signal intake**           | Reads structured news from the Redis `newsCollection` list and fetches text from configured Telegram channels, keeping up to 20 current messages per channel and a deduplicated history of up to 500.             |
+| **Headline extraction**     | Uses Gemini tool calls to append short, non-duplicate items to `marqueeItems` for the scrolling dashboard strip.                                                                                                  |
+| **Geospatial intelligence** | Extracts latitude, longitude, and a short description into conflict, concern, and weather collections; the dashboard validates coordinates before plotting them with Leaflet.                                     |
+| **Stability assessment**    | Produces structured India and World risk, stabilizer, exposure, confidence, and uncertainty inputs, then converts them into a bounded 0–100 score with explicit weights.                                          |
+| **Report generation**       | Selects up to three high-priority stories, searches through a configurable news service, scrapes publisher pages with Playwright, and stores a concise report with source URLs and an available Open Graph image. |
+| **Telegram OSINT**          | Fetches channel messages through GramJS, prefers newly observed text, summarizes distinct events with an Ollama-hosted model, and replaces the current Telegram summary in Redis.                                 |
+| **Dashboard resilience**    | Converts failed or non-2xx API reads to empty UI states, ignores malformed coordinate and article records, and allows the map to render when its local boundary file cannot be loaded.                            |
+| **Scheduling**              | Resets and recreates a BullMQ schedule at startup, queues one immediate Telegram run, and then runs at `06:30, 08:30, …, 20:30` in `Asia/Kolkata` with concurrency fixed at one.                                  |
+| **Source presentation**     | Groups report links by registrable domain, displays publisher favicons, and removes duplicate domains from each report card.                                                                                      |
+
+> [!NOTE]
+> The Redis API, dashboard surfaces, news transformation, stability calculation, Telegram ingestion, and deep-report path are implemented. The X search module currently prints a standalone digest and is not connected to Redis or the dashboard. The Sarvam implementation is an unused alternative path, `web/README.md` is still Astro starter text, and the repository has no automated test suite. The default Astro production build is static, so its API data is captured at build time; continuous production updates require SSR output or client-side refresh logic.
+
+## From sources to operating picture
+
+```mermaid
+flowchart LR
+  NR[News aggregator] -->|newsCollection| R[(Redis)]
+  TG[Telegram channels] --> Sync[Fetch and deduplicate]
+  Schedule[BullMQ schedule] -. repeats .-> Sync
+  Sync --> Summary[Summarize signals] --> R
+  R --> Extract[Extract UI data]
+  Extract --> Assess[Score stability] --> R
+  Extract --> Select[Select priority stories] --> R
+  R --> Deep[Deep-search pipeline]
+  Deep --> Search[News search service] --> Scrape[Publisher scrape]
+  Scrape --> Report[Generate report] --> R
+  R --> API[Express JSON API] --> Astro[Astro page] --> UI[Intel dashboard]
+```
+
+The headline and coordinate paths append only items the model considers new; stability summaries replace the current regional value while retaining the latest five scores. Telegram collection retries its network connection, closes Redis and Telegram clients with eight-second safeguards, and falls back from new messages to the current deduplicated set. Deep search processes selected stories sequentially, makes at most two search tool calls per story, scrapes up to three pages concurrently by default, and blacklists domains whose extracted body is shorter than the configured threshold.
+
+## Information model
+
+```mermaid
+flowchart TD
+  Intel[Intel dashboard]
+  Intel --> Signals[Live signals]
+  Intel --> Geo[Geospatial intelligence]
+  Intel --> Stability[Stability indices]
+  Intel --> Reports[Deep reports]
+
+  Signals --> Marquee[Headline marquee]
+  Signals --> Telegram[Telegram summaries]
+
+  Geo --> Conflict[Conflict events]
+  Geo --> Concern[Concern events]
+  Geo --> Weather[Weather events]
+
+  Stability --> India[India score and drivers]
+  Stability --> World[World score and drivers]
+
+  Reports --> Articles[Generated articles]
+  Reports --> Sources[Publisher links]
+  Reports --> Images[Open Graph images]
 ```
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-  subgraph Sources
-    TG["Telegram channels"]
-    X["X search via Grok API"]
-    NR["NewsRoom API<br/>RSS + Google Search API"]
-    PUB["Publisher pages"]
+flowchart LR
+  subgraph Inputs[External inputs]
+    News[Upstream news aggregator]
+    Channels[Telegram channels]
+    SearchAPI[News search service]
+    Publishers[Publisher pages]
+    Models[Gemini, Ollama, and OpenRouter]
   end
 
-  subgraph Pipelines
-    T1["ai/telegram/channel.js"]
-    T2["ai/telegram/pipeline.js"]
-    S1["ai/stat_data/pipeline.js"]
-    D1["ai/deep_search/pipeline.js"]
-    X1["ai/x_search/x.js"]
-    O1["ai/orchestrator.js"]
+  subgraph Domain[AI and domain pipelines]
+    TelegramPipe[Telegram pipeline]
+    StatPipe[News extraction pipeline]
+    Stability[Stability compute layer]
+    DeepPipe[Deep-search pipeline]
+    XSearch[Standalone X search]
   end
 
-  R[("Redis")]
-  API["server/server.js"]
-  WEB["web/ dashboard"]
+  subgraph Data[Data and scheduling]
+    Queue[BullMQ]
+    Redis[(Redis)]
+  end
 
-  TG --> T1 --> T2 --> R
-  NR --> S1 --> R
-  R --> D1 --> PUB --> R
-  X --> X1
-  O1 --> T2
-  R --> API --> WEB
+  subgraph Delivery[Delivery]
+    Server[Express API]
+    Page[Astro page]
+    React[React islands]
+  end
+
+  Channels --> TelegramPipe
+  Queue --> TelegramPipe
+  Models --> TelegramPipe
+  News --> Redis
+  Redis --> StatPipe
+  Models --> StatPipe
+  StatPipe --> Stability
+  Stability --> Redis
+  StatPipe --> Redis
+  Redis --> DeepPipe
+  DeepPipe --> SearchAPI
+  SearchAPI --> DeepPipe
+  DeepPipe --> Publishers
+  Publishers --> DeepPipe
+  Models --> DeepPipe
+  DeepPipe --> Redis
+  Models --> XSearch
+  Redis --> Server --> Page --> React
 ```
 
-## Runtime Flow
+Redis is the system boundary shared by otherwise independent Node.js entry points; there is no in-process application container or top-level runner. AI functions expose Zod-validated tools that own their Redis writes, while `computeStabilityIndex` keeps the scoring formula deterministic and isolated from generation. The API performs narrow read transformations and returns `404` for missing collections. Astro owns the initial API fetch and passes normalized data into client-only React components. Errors are mostly handled at process, fetch, or record boundaries; there is no shared error middleware, authentication layer, or retry policy across the system.
 
-### 1. Telegram pipeline
+## Tech stack
 
-- [`ai/telegram/channel.js`](/home/aneesh/code/world-intelligence/ai/telegram/channel.js) fetches and deduplicates recent Telegram messages
-- [`ai/telegram/pipeline.js`](/home/aneesh/code/world-intelligence/ai/telegram/pipeline.js) summarizes them
-- Results land in Redis keys such as `telegram:dedup:latest20`, `telegram:new:latest20`, and `Telegram-Info`
+| Layer                      | Technology                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| **Language and runtime**   | JavaScript ES modules on Node.js; Astro frontmatter includes TypeScript annotations        |
+| **Web application**        | Astro 5.17, React 18.3, `@astrojs/react`                                                   |
+| **Styling**                | Tailwind CSS 4.2, custom CSS, Inter, Instrument Serif                                      |
+| **API**                    | Express 5.2                                                                                |
+| **Persistence and queues** | Redis 5.11 client, BullMQ 5.70                                                             |
+| **AI orchestration**       | Vercel AI SDK 6, Zod 4.3                                                                   |
+| **Model providers**        | Google Gemini, local Ollama, Sarvam-compatible OpenAI API, xAI through OpenRouter          |
+| **Source collection**      | GramJS (`telegram`), configurable news-search HTTP endpoint, Playwright Chromium           |
+| **Mapping**                | Leaflet, React Leaflet, TopoJSON, CARTO tiles, OpenStreetMap attribution                   |
+| **Testing**                | No test framework configured; one Redis inspection script exists at `ai/stat_data/test.js` |
+| **Deployment**             | No deployment manifest or CI workflow is committed                                         |
 
-### 2. Dashboard data pipeline
+## Project structure
 
-- [`ai/stat_data/pipeline.js`](/home/aneesh/code/world-intelligence/ai/stat_data/pipeline.js) reads `newsCollection`
-- [`ai/stat_data/ai.js`](/home/aneesh/code/world-intelligence/ai/stat_data/ai.js) extracts:
-  - marquee headlines
-  - coordinate markers
-  - India stability summary
-  - World stability summary
-  - selected article candidates
+```text
+.
+├── ai/                              # Ingestion, analysis, and generation package
+│   ├── orchestrator.js              # Immediate + scheduled Telegram jobs
+│   ├── telegram/
+│   │   ├── channel.js               # GramJS collection and message history
+│   │   ├── pipeline.js              # Collection-to-summary workflow
+│   │   └── default-channels.js      # Local ignored config; create during setup
+│   ├── stat_data/
+│   │   ├── pipeline.js              # newsCollection transformation entry point
+│   │   ├── ai.js                    # Gemini extraction workflow
+│   │   └── test.js                  # Manual Redis inspection script
+│   ├── stability-index/             # Validated assessment and deterministic score
+│   ├── article_generation/          # Priority-story selection tool
+│   ├── deep_search/                  # Search, Playwright scraping, report storage
+│   └── x_search/x.js                # Standalone OpenRouter/xAI digest
+├── server/
+│   └── server.js                    # Redis-backed `/v1/*` Express endpoints
+├── web/
+│   ├── public/data/                 # India TopoJSON boundary
+│   └── src/
+│       ├── pages/index.astro         # API composition and page layout
+│       ├── components/              # Map, stability, reports, marquee, Telegram
+│       └── styles/global.css         # Tailwind import and shared visual rules
+├── LICENSE                           # GNU AGPL v3 license text
+└── README.md
+```
 
-### 3. Article generation pipeline
+## Requirements
 
-- [`ai/deep_search/pipeline.js`](/home/aneesh/code/world-intelligence/ai/deep_search/pipeline.js) reads `selectedArticles`
-- [`ai/deep_search/tools.js`](/home/aneesh/code/world-intelligence/ai/deep_search/tools.js) calls the configured search service via `DEEP_SEARCH_URL`
-- Matching publisher pages are scraped and saved as `savedArticles`
+- Node.js 20.12 or newer, because the entry points use the built-in `process.loadEnvFile` API, plus npm for the three package lockfiles.
+- A reachable Redis server. Local development defaults to `redis://127.0.0.1:6379`.
+- An upstream process that populates the `newsCollection` Redis list. This repository does not ingest RSS or Google results itself.
+- A Google AI API key for the news extraction and deep-report pipelines.
+- Telegram API credentials and a GramJS session string for channel collection.
+- Ollama with access to `kimi-k2.5:cloud` for Telegram summarization.
+- A reachable service compatible with the `DEEP_SEARCH_URL` request contract, plus outbound access to publisher pages for report generation.
+- Playwright's Chromium browser when the deep-search scraper is used.
+- An OpenRouter key only when running the standalone X search module; a Sarvam key is currently also required when loading `stat_data/pipeline.js` because its alternative provider module is imported eagerly.
+- Network access for configured AI providers, Telegram, the search service, publisher sites, CARTO map tiles, Google Fonts, and favicon requests.
 
-### 4. API + frontend
+There is no simulator, physical-device, or production-specific runtime in the repository. Local development serves Astro on port `4321` and Express on `8006` by default. A default `astro build` emits a static dashboard snapshot; production deployments that must refresh without rebuilding need an Astro server adapter or client-side polling, neither of which is configured here.
 
-- [`server/server.js`](/home/aneesh/code/world-intelligence/server/server.js) reads Redis and exposes JSON endpoints
-- [`web/src/pages/index.astro`](/home/aneesh/code/world-intelligence/web/src/pages/index.astro) fetches those endpoints and renders the dashboard
+## Getting started
 
-## Product Surface
+1. Clone the repository and enter it.
 
-The current UI includes:
+   ```bash
+   git clone https://github.com/aneeshpatne/Intel.git
+   cd Intel
+   ```
 
-- scrolling marquee headlines
-- geospatial event markers
-- India and World stability panels
-- AI-generated breaking-news article cards
-- Telegram OSINT summaries
+2. Install each package from its lockfile, then install the scraper browser.
 
-## API
+   ```bash
+   npm --prefix ai ci
+   npm --prefix server ci
+   npm --prefix web ci
+   npm --prefix ai exec -- playwright install chromium
+   ```
 
-Current server endpoints:
+3. Create `ai/.env`. Start with the variables needed by the pipelines you intend to run.
 
-- `GET /v1/marquee`
-- `GET /v1/coordinates`
-- `GET /v1/telegram`
-- `GET /v1/breaking-news`
-- `GET /v1/stability/:region`
+   ```dotenv
+   REDIS_URL=redis://127.0.0.1:6379
+   PORT=8006
 
-Supported stability regions in the current UI are `India` and `World`.
+   GEMINI_API_KEY=
+   SARVAM_KEY=
+   OPENROUTER_API_KEY=
 
-## Redis Keys
+   TG_API_ID=
+   TG_API_HASH=
+   TG_SESSION_STRING=
+   TG_CHANNEL_LINKS=
 
-Primary keys used by this repo:
+   DEEP_SEARCH_URL=http://127.0.0.1:8000/v1/news
+   SAVED_ARTICLES_KEY=savedArticles
+   ```
 
-- `newsCollection` from the upstream NewsRoom pipeline
-- `marqueeItems`
-- `coordinates:conflict`
-- `coordinates:weather`
-- `coordinates:concern`
-- `selectedArticles`
-- `selectedArticles:list`
-- `savedArticles`
-- `Telegram-Info`
-- `Telegram-Desc`
-- `telegram:dedup:latest20`
-- `telegram:new:latest20`
-- `stability_summary:India`
-- `stability_summary:World`
-- `stability_assessment:India`
-- `stability_assessment:World`
-- `stability_score:India`
-- `stability_score:World`
+   Telegram Redis keys, queue name, scraper concurrency, minimum content length, and blacklist key can also be overridden with `TG_REDIS_KEY`, `TG_REDIS_NEW_KEY`, `TG_QUEUE_NAME`, `TG_SUPPRESS_TIMEOUT_LOGS`, `SCRAPE_CONCURRENCY`, `MIN_CONTENT_LENGTH`, and `SCRAPE_BLACKLIST_SET_KEY`.
 
-## Environment
+4. Create the ignored channel-list module. It must exist even when `TG_CHANNEL_LINKS` is set because `channel.js` imports it at startup.
 
-Most runtime configuration is loaded from `ai/.env`.
+   ```js
+   // ai/telegram/default-channels.js
+   export const defaultChannels = [];
+   ```
 
-### Core
+5. Point the web package at the local API with `web/.env`.
 
-- `REDIS_URL`
-- `PORT`
-- `PUBLIC_API_BASE_URL`
+   ```dotenv
+   PUBLIC_API_BASE_URL=http://127.0.0.1:8006
+   ```
 
-### AI
+6. Start Redis, the API, and the development dashboard in separate terminals.
 
-- `GEMINI_API_KEY`
-- `OPENROUTER_API_KEY`
+   ```bash
+   redis-server
+   ```
 
-### Telegram
+   ```bash
+   node server/server.js
+   ```
 
-- `TG_API_ID`
-- `TG_API_HASH`
-- `TG_SESSION_STRING`
-- `TG_CHANNEL_LINKS`
-- `TG_QUEUE_NAME`
-- `TG_REDIS_KEY`
-- `TG_REDIS_NEW_KEY`
-- `TG_SUPPRESS_TIMEOUT_LOGS`
+   ```bash
+   npm --prefix web run dev
+   ```
 
-Default Telegram channels live in [`ai/telegram/default-channels.js`](/home/aneesh/code/world-intelligence/ai/telegram/default-channels.js).
+7. Populate data by running the relevant pipelines. The statistical pipeline expects `newsCollection` to exist; deep search expects `selectedArticles` produced by that pipeline.
 
-### Deep search
+   ```bash
+   node ai/stat_data/pipeline.js
+   node ai/deep_search/pipeline.js
+   node ai/telegram/pipeline.js
+   ```
 
-- `DEEP_SEARCH_URL`
-- `SAVED_ARTICLES_KEY`
+   Use `node ai/orchestrator.js` instead of the one-off Telegram command when scheduled collection is desired. Run `node ai/x_search/x.js` separately for the console-only World, India, and Mumbai digest.
 
-## Local Setup
+> [!IMPORTANT]
+> The source contains development fallbacks for `DEEP_SEARCH_URL` and `PUBLIC_API_BASE_URL` that point to `192.168.0.99`. Replace them through environment configuration before sharing or deploying the application. Keep API keys, Telegram credentials, session strings, and private channel lists out of version control. The API currently has no authentication, so do not expose it publicly without an access-control layer.
 
-Install dependencies in each package:
+## Running tests
+
+There is no `npm test` script, test runner, or committed automated suite. In an IDE, use JavaScript/TypeScript diagnostics and run the Astro production build before submitting a UI change. The equivalent command-line checks are:
 
 ```bash
-cd ai && npm install
-cd server && npm install
-cd web && npm install
+find ai server -name '*.js' -print0 | xargs -0 -n1 node --check
+npm --prefix web run build
 ```
 
-Start Redis first, or point `REDIS_URL` at a reachable instance.
+With Redis running and representative data loaded, `node ai/stat_data/test.js` can print current marquee and coordinate values for manual inspection. It does not contain assertions and should not be treated as a passing test suite. Future automated coverage should target the deterministic stability calculation, Redis-to-API parsing, coordinate normalization, and empty-data UI behavior.
 
-Run the API:
+## Roadmap
 
-```bash
-cd server
-node server.js
-```
+- Add unit tests for `computeStabilityIndex`, API record parsing, and frontend normalizers, followed by an integration test against disposable Redis.
+- Replace the ignored required channel module with a committed safe example and add validated environment loading for each entry point.
+- Connect `ai/x_search/x.js` to a defined Redis contract or remove it from the dashboard pipeline surface.
+- Choose a live production delivery model—Astro SSR or client polling—and remove the private-LAN URL fallbacks.
+- Remove the eager, unused Sarvam import or expose provider selection explicitly so the main statistical pipeline only requires credentials it uses.
+- Add authenticated API access, deployment configuration, and a CI workflow that runs syntax checks and the Astro build.
 
-Run the dashboard:
+## License
 
-```bash
-cd web
-npm run dev
-```
+Intel is licensed under the [GNU Affero General Public License v3.0](LICENSE). In practical terms, modified versions offered to users over a network must provide those users access to the corresponding source under the same license; consult the license text for the complete terms.
 
-Run pipelines as needed:
+---
 
-```bash
-cd ai
-node telegram/pipeline.js
-node orchestrator.js
-node stat_data/pipeline.js
-node deep_search/pipeline.js
-node x_search/x.js
-```
-
-## Notes
-
-- The frontend defaults `PUBLIC_API_BASE_URL` to `http://192.168.0.99:8006` when unset in [`web/src/pages/index.astro`](/home/aneesh/code/world-intelligence/web/src/pages/index.astro#L8)
-- The API server loads environment variables from `ai/.env` in [`server/server.js`](/home/aneesh/code/world-intelligence/server/server.js#L7)
-- There is no top-level package manager entrypoint right now; `ai/`, `server/`, and `web/` are run separately
+<div align="center">
+  Built with Astro, React, Redis, and small Node.js pipelines for a quieter view of a noisy world.
+</div>
